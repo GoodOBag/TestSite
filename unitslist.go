@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -27,7 +27,7 @@ func unitslist(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "unitslist-unitslist-3")
 
 	if r.Method == "POST" {
-		fmt.Println(r.Form["Unit"])
+		//fmt.Println(r.Form["Unit"])
 		_ = updateUnits(r.Form["Unit"])
 	}
 }
@@ -36,10 +36,25 @@ const tpl_unit = `
 <html>
 <head>
 <title>Update Units</title>
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script>
+  $(function () {
+    $('form').on('submit', function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: 'post',
+        data: $('form').serialize(),
+        success: function () {
+          alert('Successfully saved');
+        }
+      });
+    });
+  });
+</script>
 </head>
 <body>
 <h2>Units</h2>
-<form action="/UnitsList" method="post">
+<form method="post">
 
   <table>
 
@@ -56,7 +71,7 @@ const tpl_unit = `
 
   <br>
   <span>&nbsp</span>
-  <input type="submit" value="Update Units">
+  <input type="submit" value="Save">
 </form>
 
 </body>

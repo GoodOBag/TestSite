@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -14,7 +14,7 @@ type BuildingsDefault struct {
 }
 
 func buildinglist(w http.ResponseWriter, r *http.Request) {
-	TempBldg, TempAddr, TempZip, TempNotes := getBldgs()
+	_, TempBldg, TempAddr, TempZip, TempNotes := getBldgs()
 
 	t, err := template.New("").Parse(tpl_building)
 	checkError(err, "buildinglist-buildinglist-1")
@@ -57,7 +57,7 @@ func buildinglist(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "buildinglist-buildinglist-10")
 
 	if r.Method == "POST" {
-		fmt.Println(r.Form)
+		//fmt.Println(r.Form)
 		_ = updateBldgs(r.Form["Building Name"], r.Form["Address"], r.Form["Zip Code"], r.Form["Notes"])
 	}
 }
@@ -67,6 +67,21 @@ const tpl_building = `
 <html>
 <head>
 <title></title>
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script>
+  $(function () {
+    $('form').on('submit', function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: 'post',
+        data: $('form').serialize(),
+        success: function () {
+          alert('Successfully saved.\nBuildings without a building name, address or zip code will not be saved');
+        }
+      });
+    });
+  });
+</script>
 </head>
 <body>
 
@@ -88,7 +103,7 @@ const tpl_building = `
 
       <td><input type="text" name="Address" value="{{.Address}}"></td>  
 
-      <td><input type="text" name="Zip Code" value="{{.ZipCode}}"></td>
+      <td><input type="number" name="Zip Code" value="{{.ZipCode}}"></td>
 
       <td><input type="text" name="Notes" value="{{.Notes}}"></td>
     </tr>
@@ -98,7 +113,7 @@ const tpl_building = `
   </table>
   <br>
   <span>&nbsp</span>
-  <input type="submit" value="Update">
+  <input type="submit" value="Save">
 </form>
 </body>
 </html>

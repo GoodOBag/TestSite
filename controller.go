@@ -1,12 +1,22 @@
 package main
 
+import (
+	"strconv"
+)
+
 func getUnits() []string {
-	units := []string{"lb", "ea"}
+	units := unittableGet()
 	return units
 }
 
 func updateUnits(units []string) bool {
-	_ = units
+	unitsMod := make([]string, 0)
+	for _, unit := range units {
+		if unit != "" {
+			unitsMod = append(unitsMod, unit)
+		}
+	}
+	_ = unittableReplace(unitsMod)
 	return true
 }
 
@@ -23,16 +33,45 @@ func updateItems(items []string, units []string, unitPrices []string, notes []st
 	return true
 }
 
-func getBldgs() (bldgs []string, addrs []string, zips []string, notes []string) {
-	bldgs = []string{"St. Mary", "Alice St.", "Harrison St.", "Hilltop"}
-	addrs = []string{"130 A st.", "200 Alice St.", "30 Harrison St.", "150 G st."}
-	zips = []string{"12300", "45006", "70089", "05008"}
-	notes = []string{"", "aaa", "", "xxx"}
-	return bldgs, addrs, zips, notes
+func getBldgs() (regdates []int, bldgs []string, addrs []string, zips []string, notes []string) {
+	regdates, bldgs, addrs, zipsInt, notes := bldgtableGet()
+	for _, val := range zipsInt { //convert zips to string as the form returns string
+		zips = append(zips, strconv.Itoa(val))
+	}
+	return
 }
 
-func updateBldgs(bldgs []string, addrs []string, zips []string, notes []string) bool {
-	_, _, _, _ = bldgs, addrs, zips, notes
+func updateBldgs(bldgsRaw []string, addrsRaw []string, zipsRaw []string, notesRaw []string) bool {
+	bldgs := make([]string, 0)
+	addrs := make([]string, 0)
+	zips := make([]string, 0)
+	notes := make([]string, 0)
+	for i, _ := range bldgsRaw {
+		if bldgsRaw[i] != "" && addrsRaw[i] != "" && zipsRaw[i] != "" {
+			bldgs = append(bldgs, bldgsRaw[i])
+			addrs = append(addrs, addrsRaw[i])
+			zips = append(zips, zipsRaw[i])
+			notes = append(notes, notesRaw[i])
+		}
+	}
+
+	refDates, refBldgs, _, _, _ := getBldgs()
+	regdates := make([]int, 0)
+	for _, val := range bldgs {
+		tempIndx := findStrInSlice(val, refBldgs)
+		if tempIndx != -1 { //if bldg name exist, use existing date
+			regdates = append(regdates, refDates[tempIndx])
+		} else { //if new bldg name, use current date
+			regdates = append(regdates, getCurrentDate())
+		}
+	}
+	intZips := make([]int, 0)
+	for _, val := range zips {
+		intZip, err := strconv.Atoi(val)
+		checkError(err, "controller-updateBldgs")
+		intZips = append(intZips, intZip)
+	}
+	_ = bldgtableReplace(regdates, bldgs, addrs, intZips, notes)
 	return true
 }
 
