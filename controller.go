@@ -21,15 +21,27 @@ func updateUnits(units []string) bool {
 }
 
 func getItems() (items []string, units []string, unitPrices []float64, notes []string) {
-	items = []string{"Apple", "Banana", "Orange", "Cabbage"}
-	units = []string{"ea", "ea", "lb", "ea"}
-	unitPrices = []float64{1.99, 0.79, 1.49, 2.09}
-	notes = []string{"ww", "aaa", "g", "xxx"}
-	return items, units, unitPrices, notes
+	items, units, unitPrices, notes = itemtableGet()
+	return
 }
 
-func updateItems(items []string, units []string, unitPrices []string, notes []string) bool { //unitprice read from map as string
-	_, _, _, _ = items, units, unitPrices, notes
+func updateItems(itemsRaw []string, unitsRaw []string, unitPricesRaw []string, notesRaw []string) bool { //unitprice read from map as string
+	items := make([]string, 0)
+	units := make([]string, 0)
+	unitPrices := make([]float64, 0)
+	notes := make([]string, 0)
+
+	for i, _ := range itemsRaw {
+		if itemsRaw[i] != "" && unitsRaw[i] != "" && unitPricesRaw[i] != "" && notesRaw[i] != "" {
+			items = append(items, itemsRaw[i])
+			units = append(units, unitsRaw[i])
+			tempPrice, err := strconv.ParseFloat(unitPricesRaw[i], 64)
+			checkError(err, "controller-updateItems")
+			unitPrices = append(unitPrices, tempPrice)
+			notes = append(notes, notesRaw[i])
+		}
+	}
+	_ = itemtableReplace(items, units, unitPrices, notes)
 	return true
 }
 

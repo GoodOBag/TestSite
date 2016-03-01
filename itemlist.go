@@ -92,6 +92,21 @@ const tpl_item = `
 <html>
 <head>
 <title></title>
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script>
+  $(function () {
+    $('form').on('submit', function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: 'post',
+        data: $('form').serialize(),
+        success: function () {
+          alert('Successfully saved.\nItems without a name, unit or unit price will not be saved.');
+        }
+      });
+    });
+  });
+</script>
 </head>
 <body>
 
@@ -122,7 +137,7 @@ const tpl_item = `
 		</select>
 	</td>
 	
-	<td><input type="number" name="Unit Price" value="{{if isValidPrice .UnitPrice}}{{.UnitPrice}}{{end}}"></td>
+	<td><input type="number" step="0.01" name="Unit Price" value="{{if isValidPrice .UnitPrice}}{{.UnitPrice}}{{end}}"></td>
 	<td><input type="text" name="Notes" value="{{.Notes}}"></td>
 </tr>
 {{end}}
