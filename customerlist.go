@@ -18,10 +18,8 @@ type CustomerInfo struct {
 }
 
 func customerlist(w http.ResponseWriter, r *http.Request) {
-	TempBldgList := []string{"A", "B", "C", "D", "E", "F"}
-
-	TempNicknames, TempPhone, TempBldg, TempRoom, TempNotes := getCustomers()
-
+	_, TempBldgList, _, _, _ := getBldgs()
+	_, TempNicknames, TempPhone, TempBldg, TempRoom, TempNotes := getCustomers()
 	t, err := template.New("").Funcs(template.FuncMap{
 		"isBldg": isBldg,
 	}).Parse(tpl_customer)
@@ -90,6 +88,21 @@ const tpl_customer = `
 <html>
 <head>
 <title></title>
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script>
+  $(function () {
+    $('form').on('submit', function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: 'post',
+        data: $('form').serialize(),
+        success: function () {
+          alert('Successfully saved.\nCustomer without a nickname, phone number, building or room number will not be saved.\nCustomer with an invalid phone number will not be saved');
+        }
+      });
+    });
+  });
+</script>
 </head>
 <body>
 

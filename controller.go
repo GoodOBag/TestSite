@@ -2,6 +2,7 @@ package main
 
 import (
 	"strconv"
+	"strings"
 )
 
 func getUnits() []string {
@@ -87,17 +88,75 @@ func updateBldgs(bldgsRaw []string, addrsRaw []string, zipsRaw []string, notesRa
 	return true
 }
 
-func getCustomers() (nicknames []string, phones []string, bldgs []string, rooms []string, notes []string) {
-	nicknames = []string{"John", "Rick", "Sam", "Ali"}
-	phones = []string{"2346", "235", "236", "247"}
-	bldgs = []string{"E", "C", "A", "B"}
-	rooms = []string{"361q", "23y", "56w", "qa354"}
-	notes = []string{"54yw", "q34y", "qw34", "e5i"}
-	return nicknames, phones, bldgs, rooms, notes
+func getCustomers() (ids []int, nicknames []string, phones []string, bldgs []string, rooms []string, notes []string) {
+	ids, _, nicknames, phonesInt64, bldgs, rooms, notes := customertableGet()
+	phonesRaw := make([]string, len(phonesInt64))
+	for i, val := range phonesInt64 {
+		phonesRaw[i] = strconv.FormatInt(val, 10)
+		phones = append(phones, "("+phonesRaw[i][0:3]+")"+phonesRaw[i][3:6]+"-"+phonesRaw[i][6:])
+	}
+	return
 }
 
 func updateCustomers(nicknames []string, phones []string, bldgs []string, rooms []string, notes []string) bool {
-	_, _, _, _, _ = nicknames, phones, bldgs, rooms, notes
+	refIds, refDates, refNicknames, refPhones, refBldg, refRooms, refNotes := customertableGet()
+
+	//check any nickname in ref but not in input, remove this row as user changed nickname to ""
+	for i, val := range refNicknames {
+		if findStrInSlice(val, nicknames) == -1 {
+			customertableDelete(refIds[i])
+		}
+	}
+
+	for i, _ := range phones {
+		phones[i] = strings.Replace(phones[i], "(", "", -1) //remove "()- " from []phones
+		phones[i] = strings.Replace(phones[i], ")", "", -1)
+		phones[i] = strings.Replace(phones[i], "-", "", -1)
+		phones[i] = strings.Replace(phones[i], " ", "", -1)
+		if len(phones[i]) == 11 { //remove the leading "1" if exists
+			phones[i] = phones[i][1:]
+		}
+		if len(phones[i]) != 10 { //remove invalid phone numbers with length != 10
+			phones[i] = ""
+		}
+		_, err := strconv.ParseInt(phones[i], 10, 64) //remove phone numbers contains non-numbers
+		if err != nil {
+			phones[i] = ""
+		}
+		if phones[i] != "" && string(phones[i][0]) == "-" { //remove negative phone numbers
+			phones[i] = ""
+		}
+
+		if nicknames[i] != "" && phones[i] != "" && bldgs[i] != "" && rooms[i] != "" { //ignore inputs with any of those fields empty
+			tempPhone, _ := strconv.ParseInt(phones[i], 10, 64) //guaranteed no error, checked previously
+			tempIndx := -1
+			for j, _ := range refNicknames {
+				if strings.EqualFold(nicknames[i], refNicknames[j]) {
+					tempIndx = j
+					break
+				}
+			}
+
+			if tempIndx != -1 { //existing record
+				if !(tempPhone == refPhones[tempIndx] && strings.EqualFold(bldgs[i], refBldg[tempIndx]) &&
+					strings.EqualFold(rooms[i], refRooms[tempIndx]) && strings.EqualFold(notes[i], refNotes[tempIndx])) {
+					//if not exactly the same, update the row but keep original ID and registration date
+					_ = customertableUpdate(refIds[tempIndx], refDates[tempIndx], refNicknames[tempIndx], tempPhone, bldgs[i], rooms[i], notes[i])
+				}
+			} else { //new record
+				customertableAppend(getCurrentDate(), nicknames[i], tempPhone, bldgs[i], rooms[i], notes[i])
+			}
+
+		} else if nicknames[i] != "" { //delete record if exists
+			for j, _ := range refNicknames {
+				if strings.EqualFold(nicknames[i], refNicknames[j]) {
+					customertableDelete(refIds[j])
+					break
+				}
+			}
+		}
+	}
+
 	return true
 }
 
