@@ -103,7 +103,7 @@ const tpl_building = `
 
       <td><input type="text" name="Address" value="{{.Address}}"></td>  
 
-      <td><input type="number" name="Zip Code" value="{{.ZipCode}}"></td>
+      <td><input type="number" name="Zip Code" max="99999" min="10000" value="{{.ZipCode}}"></td>
 
       <td><input type="text" name="Notes" value="{{.Notes}}"></td>
     </tr>

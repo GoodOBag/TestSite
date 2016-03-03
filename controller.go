@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -33,7 +34,7 @@ func updateItems(itemsRaw []string, unitsRaw []string, unitPricesRaw []string, n
 	notes := make([]string, 0)
 
 	for i, _ := range itemsRaw {
-		if itemsRaw[i] != "" && unitsRaw[i] != "" && unitPricesRaw[i] != "" && notesRaw[i] != "" {
+		if itemsRaw[i] != "" && unitsRaw[i] != "" && unitPricesRaw[i] != "" {
 			items = append(items, itemsRaw[i])
 			units = append(units, unitsRaw[i])
 			tempPrice, err := strconv.ParseFloat(unitPricesRaw[i], 64)
@@ -166,7 +167,17 @@ func logOrders(nickname string, items []string, units []string, amounts []float6
 }
 
 func logPurchases(items []string, units []string, amounts []string) bool {
-	_, _, _ = items, units, amounts
+	purchaseList := "" //e.g. apple/ea/1;banana/lb/2.5
+	for i, _ := range items {
+		if items[i] != "" && units[i] != "" && amounts[i] != "" {
+			purchaseList = purchaseList + items[i] + "/" + units[i] + "/" + amounts[i] + ";"
+		}
+	}
+	if purchaseList != "" {
+		purchaseList = purchaseList[:len(purchaseList)-1] //remove the last delimiter ;
+	}
+	_ = purchasetableAppend(getCurrentDate(), purchaseList)
+	fmt.Println(purchaseList)
 	return true
 }
 

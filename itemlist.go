@@ -137,7 +137,7 @@ const tpl_item = `
 		</select>
 	</td>
 	
-	<td><input type="number" step="0.01" name="Unit Price" value="{{if isValidPrice .UnitPrice}}{{.UnitPrice}}{{end}}"></td>
+	<td><input type="number" step="0.01" min="0" name="Unit Price" value="{{if isValidPrice .UnitPrice}}{{.UnitPrice}}{{end}}"></td>
 	<td><input type="text" name="Notes" value="{{.Notes}}"></td>
 </tr>
 {{end}}

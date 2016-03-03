@@ -12,8 +12,8 @@ type PinfoDefault struct {
 }
 
 func purchaseinfo(w http.ResponseWriter, r *http.Request) {
-	TempItems := []string{"Apple", "Banana", "Orange", "Cabbage"}
-	TempUnits := []string{"lb", "ea"}
+	TempItems, _, _, _ := getItems()
+	TempUnits := getUnits()
 
 	pinfo := PinfoDefault{
 		ItemList: TempItems,
@@ -41,6 +41,7 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		fmt.Println(r.Form)
+		_ = logPurchases(r.Form["Item"], r.Form["Unit"], r.Form["Amount"])
 	}
 }
 
@@ -83,7 +84,7 @@ const tpl_purchase = `
         </select>
       </td>
       <span>&nbsp</span>
-      <td><input type="number" name="Amount"></td>
+      <td><input type="number" step="0.01" min="0" name="Amount"></td>
     </tr>
 {{end}}
 
@@ -92,7 +93,7 @@ const tpl_purchase = `
 
   <br>
   <span>&nbsp</span>
-  <input type="submit" value="Update Purchases">
+  <input type="submit" value="Save & Proceed">
 </form>
 
 </body>
