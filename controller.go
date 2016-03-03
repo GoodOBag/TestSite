@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -161,8 +160,20 @@ func updateCustomers(nicknames []string, phones []string, bldgs []string, rooms 
 	return true
 }
 
-func logOrders(nickname string, items []string, units []string, amounts []float64) bool {
-	_, _, _, _ = nickname, items, units, amounts
+func logOrders(nicknames []string, items []string, units []string, amounts []string, notes []string) bool {
+	nickname := nicknames[0]
+	if nickname != "" {
+		orderList := ""
+		for i, _ := range items {
+			if items[i] != "" && units[i] != "" && amounts[i] != "" {
+				orderList = orderList + items[i] + "/" + units[i] + "/" + amounts[i] + "/" + notes[i] + ";"
+			}
+		}
+		if orderList != "" {
+			orderList = orderList[:len(orderList)-1] //remove the last delimiter ;
+		}
+		_ = ordertableAppend(nickname, getCurrentDate(), orderList)
+	}
 	return true
 }
 
@@ -177,7 +188,6 @@ func logPurchases(items []string, units []string, amounts []string) bool {
 		purchaseList = purchaseList[:len(purchaseList)-1] //remove the last delimiter ;
 	}
 	_ = purchasetableAppend(getCurrentDate(), purchaseList)
-	fmt.Println(purchaseList)
 	return true
 }
 

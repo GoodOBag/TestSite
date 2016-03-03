@@ -13,9 +13,9 @@ type OrderInfo struct {
 }
 
 func orderinfo(w http.ResponseWriter, r *http.Request) {
-	TempNicknames := []string{"", "John-Harrison-301", "Jane-StMary-226"}
-	TempUnits := []string{"lb", "ea"}
-	TempItems := []string{"Apple", "Banana", "Orange", "Cabbage"}
+	_, TempNicknames, _, _, _, _ := getCustomers()
+	TempUnits := getUnits()
+	TempItems, _, _, _ := getItems()
 
 	oinfo := OrderInfo{
 		NicknameList: TempNicknames,
@@ -46,6 +46,7 @@ func orderinfo(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		fmt.Println(r.Form)
+		_ = logOrders(r.Form["Nickname"], r.Form["Item"], r.Form["Unit"], r.Form["Amount"], r.Form["Notes"])
 	}
 }
 
@@ -59,7 +60,7 @@ const tpl_order = `
 
 <form action="/OrderInfo" method="post">
 
-  <p><span>&nbsp</span>Nickname</p>
+  <p><span>&nbsp</span>*Nickname</p>
   <span>&nbsp</span>
   <select name="Nickname">
 	{{range .NicknameList}}
@@ -80,7 +81,7 @@ const tpl_order = `
 
 {{define "t_mid"}}
     <tr>
-      <td><input type="number" name="Amount"></td>
+      <td><input type="number" min="0" name="Amount"></td>
       <span>&nbsp</span>
       <td>
         <select name="Unit">
