@@ -93,7 +93,7 @@ func getCustomers() (ids []int, nicknames []string, phones []string, bldgs []str
 	phonesRaw := make([]string, len(phonesInt64))
 	for i, val := range phonesInt64 {
 		phonesRaw[i] = strconv.FormatInt(val, 10)
-		phones = append(phones, "("+phonesRaw[i][0:3]+")"+phonesRaw[i][3:6]+"-"+phonesRaw[i][6:])
+		phones = append(phones, "("+phonesRaw[i][0:3]+") "+phonesRaw[i][3:6]+"-"+phonesRaw[i][6:])
 	}
 	return
 }
@@ -178,31 +178,30 @@ func logOrders(nicknames []string, items []string, units []string, amounts []str
 }
 
 func logPurchases(items []string, units []string, amounts []string) bool {
-	purchaseList := "" //e.g. apple/ea/1;banana/lb/2.5
 	for i, _ := range items {
 		if items[i] != "" && units[i] != "" && amounts[i] != "" {
-			purchaseList = purchaseList + items[i] + "/" + units[i] + "/" + amounts[i] + ";"
+			amount, err := strconv.ParseFloat(amounts[i], 64)
+			checkError(err, "controller-logPurchases-1")
+			_ = purchasetableAppend(getCurrentDate(), items[i], units[i], amount)
 		}
 	}
-	if purchaseList != "" {
-		purchaseList = purchaseList[:len(purchaseList)-1] //remove the last delimiter ;
-	}
-	_ = purchasetableAppend(getCurrentDate(), purchaseList)
+
 	return true
 }
 
-func getAllOrders() {
+func getOrders() {
 	//for daily reports
 }
 
-func updateAllOrders() {
+func updateOrders() {
 	//for daily reports
 }
 
-func getAllPurchases() {
-	//for daily reports
+func getPurchases() (ids []int, dates []int, items []string, units []string, amounts []float64) {
+	ids, dates, items, units, amounts = purchasetableGetActive()
+	return
 }
 
-func updateAllPurchases() {
+func updatePurchases() {
 	//for daily reports
 }

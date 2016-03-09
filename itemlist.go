@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"strings"
 )
 
 type ItemInfo struct {
@@ -77,14 +76,6 @@ func itemlist(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.Form)
 		_ = updateItems(r.Form["Item"], r.Form["Unit"], r.Form["Unit Price"], r.Form["Notes"])
 	}
-}
-
-func isUnit(unit string, unitOption string) bool {
-	return strings.EqualFold(unit, unitOption)
-}
-
-func isValidPrice(price float64) bool {
-	return price >= 0
 }
 
 const tpl_item = `

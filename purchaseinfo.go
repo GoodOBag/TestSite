@@ -9,6 +9,9 @@ import (
 type PinfoDefault struct {
 	ItemList []string
 	UnitList []string
+	Item     string
+	Unit     string
+	Amount   float64
 }
 
 func purchaseinfo(w http.ResponseWriter, r *http.Request) {
@@ -18,15 +21,29 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 	pinfo := PinfoDefault{
 		ItemList: TempItems,
 		UnitList: TempUnits,
+		Item:     "",
+		Unit:     "",
+		Amount:   0,
 	}
 
-	t, err := template.New("").Parse(tpl_purchase)
+	_, _, items, units, amounts := getPurchases()
+
+	t, err := template.New("").Funcs(template.FuncMap{
+		"isMatching":   isMatching,
+		"isValidPrice": isValidPrice,
+	}).Parse(tpl_purchase)
 	checkError(err, "purchaseinfo-purchaseinfo-1")
 	err = t.ExecuteTemplate(w, "t_top", pinfo)
 	checkError(err, "purchaseinfo-purchaseinfo-2")
+	for i, _ := range items {
+		pinfo.Item = items[i]
+		pinfo.Unit = units[i]
+		pinfo.Amount = amounts[i]
 
-	for i := 0; i < 10; i++ {
-		t, err = template.New("").Parse(tpl_purchase)
+		t, err = template.New("").Funcs(template.FuncMap{
+			"isMatching":   isMatching,
+			"isValidPrice": isValidPrice,
+		}).Parse(tpl_purchase)
 		checkError(err, "purchaseinfo-purchaseinfo-3")
 		err = r.ParseForm()
 		checkError(err, "purchaseinfo-purchaseinfo-4")
@@ -34,7 +51,26 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 		checkError(err, "purchaseinfo-purchaseinfo-5")
 	}
 
-	t, err = template.New("").Parse(tpl_purchase)
+	for i := 0; i < 10; i++ {
+		pinfo.Item = ""
+		pinfo.Unit = ""
+		pinfo.Amount = 0
+
+		t, err = template.New("").Funcs(template.FuncMap{
+			"isMatching":   isMatching,
+			"isValidPrice": isValidPrice,
+		}).Parse(tpl_purchase)
+		checkError(err, "purchaseinfo-purchaseinfo-3")
+		err = r.ParseForm()
+		checkError(err, "purchaseinfo-purchaseinfo-4")
+		err = t.ExecuteTemplate(w, "t_mid", pinfo)
+		checkError(err, "purchaseinfo-purchaseinfo-5")
+	}
+
+	t, err = template.New("").Funcs(template.FuncMap{
+		"isMatching":   isMatching,
+		"isValidPrice": isValidPrice,
+	}).Parse(tpl_purchase)
 	checkError(err, "purchaseinfo-purchaseinfo-6")
 	err = t.ExecuteTemplate(w, "t_bot", pinfo)
 	checkError(err, "purchaseinfo-purchaseinfo-7")
@@ -50,6 +86,21 @@ const tpl_purchase = `
 <html>
 <head>
 <title>Update Purchase</title>
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script>
+  $(function () {
+    $('form').on('submit', function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: 'post',
+        data: $('form').serialize(),
+        success: function () {
+          alert('Successfully saved');
+        }
+      });
+    });
+  });
+</script>
 </head>
 <body>
 <h2>Purchases</h2>
@@ -69,8 +120,9 @@ const tpl_purchase = `
     <tr>
       <td>
         <select name="Item">
+		  {{$item := .Item}}
           {{range .ItemList}}
-		    <option>{{.}}</option>
+		    <option {{if isMatching $item .}}selected{{end}}>{{.}}</option>
 		  {{end}}
         </select>
       </td>
@@ -78,13 +130,14 @@ const tpl_purchase = `
       <span>&nbsp</span>
       <td>
         <select name="Unit">
+		  {{$unit := .Unit}}
 		  {{range .UnitList}}
-		    <option>{{.}}</option>
+		    <option {{if isMatching $unit .}}selected{{end}}>{{.}}</option>
 		  {{end}}          
         </select>
       </td>
       <span>&nbsp</span>
-      <td><input type="number" step="0.01" min="0" name="Amount"></td>
+      <td><input type="number" step="0.01" min="0" name="Amount" value="{{if isValidPrice .Amount}}{{.Amount}}{{end}}"></td>
     </tr>
 {{end}}
 

@@ -22,3 +22,15 @@ func getCurrentDate() int {
 	checkError(err, "functions-getCurrentDate")
 	return intDate
 }
+
+func isValidPrice(price float64) bool {
+	return price > 0
+}
+
+func isUnit(unit string, unitOption string) bool {
+	return strings.EqualFold(unit, unitOption)
+}
+
+func isMatching(a string, b string) bool {
+	return strings.EqualFold(a, b)
+}
