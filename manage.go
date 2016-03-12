@@ -19,7 +19,7 @@ func login(w http.ResponseWriter, r *http.Request) { //login for manage subdomai
 
 		//add authentication verication function here
 
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 

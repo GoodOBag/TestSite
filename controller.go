@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -54,7 +55,7 @@ func getBldgs() (regdates []int, bldgs []string, addrs []string, zips []string, 
 	return
 }
 
-func updateBldgs(bldgsRaw []string, addrsRaw []string, zipsRaw []string, notesRaw []string) bool {
+func updateBldgs(bldgsRaw []string, addrsRaw []string, zipsRaw []string, notesRaw []string) bool { //sorted by bldg name
 	bldgs := make([]string, 0)
 	addrs := make([]string, 0)
 	zips := make([]string, 0)
@@ -84,7 +85,23 @@ func updateBldgs(bldgsRaw []string, addrsRaw []string, zipsRaw []string, notesRa
 		checkError(err, "controller-updateBldgs")
 		intZips = append(intZips, intZip)
 	}
-	_ = bldgtableReplace(regdates, bldgs, addrs, intZips, notes)
+
+	//sort buildings based on bldg name
+	sBldgs := bldgs
+	sort.Sort(sort.StringSlice(sBldgs))
+	sDates := make([]int, len(regdates))
+	sAddrs := make([]string, len(addrs))
+	sIntZips := make([]int, len(intZips))
+	sNotes := make([]string, len(notes))
+	for i, _ := range bldgs {
+		indx := sort.SearchStrings(sBldgs, bldgs[i])
+		sDates[indx] = regdates[i]
+		sAddrs[indx] = addrs[i]
+		sIntZips[indx] = intZips[i]
+		sNotes[indx] = notes[i]
+	}
+
+	_ = bldgtableReplace(sDates, sBldgs, sAddrs, sIntZips, sNotes)
 	return true
 }
 
@@ -184,13 +201,19 @@ func logPurchases(items []string, units []string, amounts []string) bool {
 			checkError(err, "controller-logPurchases-1")
 			_ = purchasetableAppend(getCurrentDate(), items[i], units[i], amount)
 		}
-	}
+	} //will need to implement feature to remove purchase
 
 	return true
 }
 
-func getOrders() {
-	//for daily reports
+func getOrders() (ids []int, nicknames []string, bldgs []string, orderlists []string) {
+	ids, nicknames, orderlists = ordertableGetActive()
+	_, bldgNicknames, _, bldgNldgs, _, _ := getCustomers()
+	for _, val := range nicknames {
+		indx := findStrInSlice(val, bldgNicknames)
+		bldgs = append(bldgs, bldgNldgs[indx]) //link the building to every nickname
+	}
+	return
 }
 
 func updateOrders() {

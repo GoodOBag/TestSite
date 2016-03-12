@@ -302,7 +302,7 @@ func purchasetableDelete(id int) bool {
 }
 
 //status
-func statusGet() (indx int, lastPid int, lastOid int) {
+func statusGet() (indx int) {
 	db, err := sql.Open("sqlite3", "./database/record.db")
 	checkError(err, "model-statusGet-1")
 	defer db.Close()
@@ -310,14 +310,14 @@ func statusGet() (indx int, lastPid int, lastOid int) {
 	checkError(err, "model-statusGet-2")
 
 	for rows.Next() {
-		err = rows.Scan(&indx, &lastPid, &lastOid)
+		err = rows.Scan(&indx)
 		checkError(err, "model-statusGet-3")
 		break
 	}
 	return
 }
 
-func statusUpdate(indx int, lastPid int, lastOid int) {
+func statusUpdate(indx int) {
 	db, err := sql.Open("sqlite3", "./database/record.db")
 	checkError(err, "model-statusUpdate-1")
 	defer db.Close()
@@ -325,9 +325,9 @@ func statusUpdate(indx int, lastPid int, lastOid int) {
 	_, err = db.Exec("delete from status")
 	checkError(err, "model-statusUpdate-2")
 
-	stmt, err := db.Prepare("insert into status(indx, purchaseLastId, orderLastId) values(?,?,?)")
+	stmt, err := db.Prepare("insert into status(indx) values(?)")
 	checkError(err, "model-statusUpdate-3")
-	_, err = stmt.Exec(indx, lastPid, lastOid)
+	_, err = stmt.Exec(indx)
 	checkError(err, "model-statusUpdate-4")
 
 }

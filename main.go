@@ -12,10 +12,8 @@ func (subdomains Subdomains) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	domainParts := strings.Split(r.Host, ".")
 
 	if mux := subdomains[domainParts[0]]; mux != nil {
-		// Let the appropriate mux serve the request
 		mux.ServeHTTP(w, r)
-	} else {
-		// Handle 404
+	} else { // Handle 404
 		http.Error(w, "Not found", 404)
 	}
 }
@@ -25,15 +23,14 @@ func main() {
 	manageMux := http.NewServeMux()
 	manageMux.HandleFunc("/login", login)
 	manageMux.HandleFunc("/", manage)
-	manageMux.HandleFunc("/OrderInfo", orderinfo) //Log Orders
-
-	manageMux.HandleFunc("/PurchaseInfo", purchaseinfo) //Log Purchases
-	manageMux.HandleFunc("/UnitsList", unitslist)       //lb, ea, etc.
-	manageMux.HandleFunc("/ItemList", itemlist)         //List of items to serve
-	manageMux.HandleFunc("/CustomerList", customerlist) //List of customers
-	manageMux.HandleFunc("/BuildingList", buildinglist) //Serving buildings
-
-	//manageMux.HandleFunc("/DailySummary", dailysummary) //Daily Summary
+	manageMux.HandleFunc("/OrderInfo", orderinfo)                     //Log Orders
+	manageMux.HandleFunc("/PurchaseInfo", purchaseinfo)               //Log Purchases
+	manageMux.HandleFunc("/UnitsList", unitslist)                     //lb, ea, etc.
+	manageMux.HandleFunc("/ItemList", itemlist)                       //List of items to serve
+	manageMux.HandleFunc("/CustomerList", customerlist)               //List of customers
+	manageMux.HandleFunc("/BuildingList", buildinglist)               //Serving buildings
+	manageMux.HandleFunc("/DailySummary", dailysummary)               //Daily Summary selection page
+	manageMux.HandleFunc("/DailySummaryRecords", dailysummaryrecords) //Daily Summary summary page
 
 	//domain (for future)
 
