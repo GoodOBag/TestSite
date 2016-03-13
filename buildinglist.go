@@ -75,9 +75,6 @@ const tpl_building = `
       $.ajax({
         type: 'post',
         data: $('form').serialize(),
-        success: function () {
-          alert('Successfully saved.\nBuildings without a building name, address or zip code will not be saved');
-        }
       });
     });
   });

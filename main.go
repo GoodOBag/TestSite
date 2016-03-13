@@ -31,6 +31,7 @@ func main() {
 	manageMux.HandleFunc("/BuildingList", buildinglist)               //Serving buildings
 	manageMux.HandleFunc("/DailySummary", dailysummary)               //Daily Summary selection page
 	manageMux.HandleFunc("/DailySummaryRecords", dailysummaryrecords) //Daily Summary summary page
+	//manageMux.HandleFunc("/DailySummaryPrint", dailysummaryprint)     //Daily Summary printout page
 
 	//domain (for future)
 

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -45,7 +45,7 @@ func orderinfo(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "orderinfo-orderinfo-8")
 
 	if r.Method == "POST" {
-		fmt.Println(r.Form)
+		//fmt.Println(r.Form)
 		_ = logOrders(r.Form["Nickname"], r.Form["Item"], r.Form["Unit"], r.Form["Amount"], r.Form["Notes"])
 	}
 }

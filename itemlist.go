@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -73,7 +73,7 @@ func itemlist(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "itemlist-itemlist-10")
 
 	if r.Method == "POST" {
-		fmt.Println(r.Form)
+		//fmt.Println(r.Form)
 		_ = updateItems(r.Form["Item"], r.Form["Unit"], r.Form["Unit Price"], r.Form["Notes"])
 	}
 }
@@ -91,9 +91,6 @@ const tpl_item = `
       $.ajax({
         type: 'post',
         data: $('form').serialize(),
-        success: function () {
-          alert('Successfully saved.\nItems without a name, unit or unit price will not be saved.');
-        }
       });
     });
   });

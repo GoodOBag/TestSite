@@ -44,9 +44,6 @@ const tpl_unit = `
       $.ajax({
         type: 'post',
         data: $('form').serialize(),
-        success: function () {
-          alert('Successfully saved');
-        }
       });
     });
   });
@@ -76,5 +73,4 @@ const tpl_unit = `
 
 </body>
 </html>
-
 `

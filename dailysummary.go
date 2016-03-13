@@ -74,7 +74,13 @@ func dailysummary(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		err := r.ParseForm()
 		checkError(err, "dailysummary-dailysummary-9")
-		tempUrl := "/DailySummaryRecords"
+		tempUrl := ""
+		if r.Form["type"][0] == "P" {
+			tempUrl = "/DailySummaryPrint"
+		} else {
+			tempUrl = "/DailySummaryRecords"
+		}
+
 		if len(r.Form["choices"]) > 0 {
 			tempUrl = tempUrl + "?"
 			for _, val := range r.Form["choices"] {
@@ -82,7 +88,6 @@ func dailysummary(w http.ResponseWriter, r *http.Request) {
 			}
 			tempUrl = tempUrl[:len(tempUrl)-1]
 		}
-
 		http.Redirect(w, r, tempUrl, http.StatusSeeOther)
 	}
 }
@@ -130,6 +135,9 @@ p {
 
 {{define "t_mid_bot"}}
   <br>
+  <input type="radio" name="type" value="P" checked>For print&#160&#160&#160&#160
+  <input type="radio" name="type" value="E">For edit
+  <br><br>
   <input type="submit" value="Submit" size="20">
 </form>
 {{end}}

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"html/template"
 	"net/http"
 	//"os"
@@ -74,7 +74,7 @@ func customerlist(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "customerlist-customerlist-10")
 
 	if r.Method == "POST" {
-		fmt.Println(r.Form)
+		//fmt.Println(r.Form)
 		_ = updateCustomers(r.Form["Nickname"], r.Form["Phone"], r.Form["Building"], r.Form["Room"], r.Form["Notes"])
 	}
 }
@@ -96,9 +96,6 @@ const tpl_customer = `
       $.ajax({
         type: 'post',
         data: $('form').serialize(),
-        success: function () {
-          alert('Successfully saved.\nCustomer without a nickname, phone number, building or room number will not be saved.\nCustomer with an invalid phone number will not be saved');
-        }
       });
     });
   });

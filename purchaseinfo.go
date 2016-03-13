@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -76,7 +76,7 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "purchaseinfo-purchaseinfo-7")
 
 	if r.Method == "POST" {
-		fmt.Println(r.Form)
+		//fmt.Println(r.Form)
 		_ = logPurchases(r.Form["Item"], r.Form["Unit"], r.Form["Amount"])
 	}
 }
@@ -94,9 +94,6 @@ const tpl_purchase = `
       $.ajax({
         type: 'post',
         data: $('form').serialize(),
-        success: function () {
-          alert('Successfully saved');
-        }
       });
     });
   });
