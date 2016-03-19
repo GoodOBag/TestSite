@@ -207,6 +207,23 @@ func ordertableGetActive() (ids []int, nicknames []string, orderlists []string) 
 	return
 }
 
+func ordertableGetActivePerNickname(nickname string) (ids []int, dates []int) {
+	db, err := sql.Open("sqlite3", "./database/record.db")
+	checkError(err, "model-ordertableGetActiveIdsPerNickname-1")
+	defer db.Close()
+	rows, err := db.Query("SELECT id, orderdate FROM ordertable WHERE status=0 AND nickname='" + nickname + "'")
+	checkError(err, "model-ordertableGetActiveIdsPerNickname-2")
+
+	var id, date int
+	for rows.Next() {
+		err = rows.Scan(&id, &date)
+		checkError(err, "model-ordertableGetActiveIdsPerNickname-3")
+		ids = append(ids, id)
+		dates = append(dates, date)
+	}
+	return
+}
+
 func ordertableAppend(nickname string, orderdate int, orderlist string) bool {
 	db, err := sql.Open("sqlite3", "./database/record.db")
 	checkError(err, "model-ordertableAppend-1")
@@ -219,15 +236,15 @@ func ordertableAppend(nickname string, orderdate int, orderlist string) bool {
 	return true
 }
 
-func ordertableUpdate(id int, nickname string, orderdate int, orderlist string, status int) bool {
+func ordertableUpdateStatus(id int) bool {
 	db, err := sql.Open("sqlite3", "./database/record.db")
-	checkError(err, "model-ordertableUpdate-1")
+	checkError(err, "model-ordertableUpdateStatusToActive-1")
 	defer db.Close()
-	stmt, err := db.Prepare("update ordertable set nickname=?, orderdate=?, orderlist=?, status=?  where id=?")
-	checkError(err, "model-ordertableUpdate-2")
+	stmt, err := db.Prepare("update ordertable set status=?  where id=?")
+	checkError(err, "model-ordertableUpdateStatusToActive-2")
 
-	_, err = stmt.Exec(nickname, orderdate, orderlist, status, id)
-	checkError(err, "model-ordertableUpdate-3")
+	_, err = stmt.Exec(1, id)
+	checkError(err, "model-ordertableUpdateStatusToActive-3")
 	return true
 }
 

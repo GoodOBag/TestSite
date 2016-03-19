@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -183,7 +184,7 @@ func logOrders(nicknames []string, items []string, units []string, amounts []str
 		orderList := ""
 		for i, _ := range items {
 			if items[i] != "" && units[i] != "" && amounts[i] != "" {
-				orderList = orderList + items[i] + "/" + units[i] + "/" + amounts[i] + "/" + notes[i] + ";"
+				orderList = orderList + items[i] + "," + units[i] + "," + amounts[i] + "," + notes[i] + ",,,;"
 			}
 		}
 		if orderList != "" {
@@ -191,18 +192,6 @@ func logOrders(nicknames []string, items []string, units []string, amounts []str
 		}
 		_ = ordertableAppend(nickname, getCurrentDate(), orderList)
 	}
-	return true
-}
-
-func logPurchases(items []string, units []string, amounts []string) bool {
-	for i, _ := range items {
-		if items[i] != "" && units[i] != "" && amounts[i] != "" {
-			amount, err := strconv.ParseFloat(amounts[i], 64)
-			checkError(err, "controller-logPurchases-1")
-			_ = purchasetableAppend(getCurrentDate(), items[i], units[i], amount)
-		}
-	} //will need to implement feature to remove purchase
-
 	return true
 }
 
@@ -216,8 +205,63 @@ func getOrders() (ids []int, nicknames []string, bldgs []string, orderlists []st
 	return
 }
 
-func updateOrders() {
-	//for daily reports
+func updateOrders(nickname string, items []string, units []string, amounts []float64, notes []string, units2 []string, amounts2 []float64) {
+	//this will remove all active records with the same nickname, then append the new order
+	ids, dates := ordertableGetActivePerNickname(nickname)
+	tempCheck := 0
+	for i := 0; i < len(dates)-1; i++ {
+		if dates[i] != dates[i+1] {
+			if dates[i] > dates[i+1] { //use the largest date (oldest)
+				tempCheck = dates[i]
+			} else {
+				tempCheck = dates[i+1]
+			}
+		}
+	}
+	var date int
+	if tempCheck == 0 { //if all dates for this nickname are the same, use it; else use the oldest date
+		date = dates[0]
+	} else {
+		date = tempCheck
+	}
+
+	for _, val := range ids {
+		_ = ordertableDelete(val)
+	}
+
+	refItems, refUnits, refUprices, _ := itemtableGet()
+	uMap := make(map[string]string)
+	pMap := make(map[string]float64)
+	for i, _ := range refItems {
+		uMap[refItems[i]] = refUnits[i]
+		pMap[refItems[i]] = refUprices[i]
+	}
+
+	tempOrderList := make([]string, 0)
+	for i, _ := range items {
+		var price float64
+		price = 0
+		if strings.EqualFold(uMap[items[i]], units2[i]) { //only record if available unit is found
+			price = pMap[items[i]] * amounts2[i]
+		}
+
+		tempOrders := []string{items[i], units[i], strconv.FormatFloat(amounts[i], 'f', 2, 64), notes[i], units2[i], strconv.FormatFloat(amounts2[i], 'f', 2, 64), strconv.FormatFloat(price, 'f', 2, 64)}
+		tempOrderList = append(tempOrderList, strings.Join(tempOrders, ","))
+	}
+
+	_ = ordertableAppend(nickname, date, strings.Join(tempOrderList, ";"))
+}
+
+func logPurchases(items []string, units []string, amounts []string) bool {
+	for i, _ := range items {
+		if items[i] != "" && units[i] != "" && amounts[i] != "" {
+			amount, err := strconv.ParseFloat(amounts[i], 64)
+			checkError(err, "controller-logPurchases-1")
+			_ = purchasetableAppend(getCurrentDate(), items[i], units[i], amount)
+		}
+	} //will need to implement feature to remove purchase
+
+	return true
 }
 
 func getPurchases() (ids []int, dates []int, items []string, units []string, amounts []float64) {
