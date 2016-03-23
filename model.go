@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"strconv"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -248,15 +250,19 @@ func ordertableUpdateStatus(id int) bool {
 	return true
 }
 
-func ordertableDelete(id int) bool {
+func ordertableDelete(ids []int) bool {
 	db, err := sql.Open("sqlite3", "./database/record.db")
 	checkError(err, "model-ordertableDelete-1")
 	defer db.Close()
-	stmt, err := db.Prepare("delete from ordertable where id=?")
-	checkError(err, "model-ordertableDelete-2")
 
-	_, err = stmt.Exec(id)
-	checkError(err, "model-ordertableDelete-3")
+	idStrs := make([]string, 0)
+	for _, val := range ids {
+		idStrs = append(idStrs, strconv.FormatInt(int64(val), 10))
+	}
+	idStr := strings.Join(idStrs, ",")
+
+	_, err = db.Exec("delete from ordertable where id in (" + idStr + ")")
+	checkError(err, "model-ordertableDelete-2")
 	return true
 }
 

@@ -81,7 +81,7 @@ const tpl_order = `
 
 {{define "t_mid"}}
     <tr>
-      <td><input type="number" min="0" name="Amount"></td>
+      <td><input type="number" min="0" step="0.01" name="Amount"></td>
       <span>&nbsp</span>
       <td>
         <select name="Unit">
@@ -99,7 +99,7 @@ const tpl_order = `
         </select>
       </td>
 	  <span>&nbsp</span>
-	  <td><input type="text" name="Notes"></td>
+	  <td><input type="text" name="Notes" maxlength="50" pattern="[A-Za-z0-9.*/%+-$ ]" title="letters, numbers and . * / % + - $"></td>
     </tr>
 {{end}}
 

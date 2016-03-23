@@ -23,6 +23,13 @@ func getCurrentDate() int {
 	return intDate
 }
 
+func getCurrentDateStr() string {
+	currentTime := time.Now().Local()
+	currentDate := currentTime.Format("20060102")
+	wDate := []string{currentDate[4:6], currentDate[6:8], currentDate[2:4]}
+	return strings.Join(wDate, "/")
+}
+
 func isValidPrice(price float64) bool {
 	return price > 0
 }

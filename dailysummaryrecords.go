@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type OrderStuc struct {
+type OrderStuc struct { //some of the fields are for other pages
 	Nickname string
 	Span     int
 	Item     string
@@ -17,6 +17,8 @@ type OrderStuc struct {
 	Note     string
 	Unit2    string
 	Amount2  float64
+	Price    float64
+	Total    string
 	IsFirst  bool
 }
 
@@ -46,6 +48,15 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 		selections := strings.Split(url, "+")
 
 		_, refNicknames, refBldgs, refOrders := getOrders()
+		//make a map to improve speed
+		refMap := make(map[string][]int)
+		for i, n := range refNicknames {
+			if refMap[n] == nil {
+				refMap[n] = []int{i}
+			} else {
+				refMap[n] = append(refMap[n], i)
+			}
+		}
 
 		if r.Method == "GET" {
 			t, err := template.New("").Parse(tpl_record)
@@ -58,13 +69,20 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 				//sort nicknames per selection (bldg)
 				tempList := make([]string, 0) //take nicknames per selection (bldg)
 				for i, refBldg := range refBldgs {
-					if strings.EqualFold(refBldg, bldg) {
+					if refBldg == bldg {
 						tempList = append(tempList, refNicknames[i])
 					}
 				}
 				bldgName := BldgName{
 					BldgName: bldg,
 				}
+
+				itemItem, itemUnit, _, _ := getItems() //get default units for each item
+				itemUnitMap := make(map[string]string)
+				for i, _ := range itemItem {
+					itemUnitMap[itemItem[i]] = itemUnit[i]
+				}
+
 				t, err = template.New("").Parse(tpl_record)
 				checkError(err, "dailysummaryrecords-dailysummaryrecords-3")
 				err = t.ExecuteTemplate(w, "t_bldgTop", bldgName)
@@ -72,36 +90,40 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 				tempList = uniqueStrings(tempList)
 				sort.Strings(tempList) //sort unique nicknames
 				for _, tempNickname := range tempList {
-					for i, refNickname := range refNicknames {
-						if strings.EqualFold(tempNickname, refNickname) { //write out orders sorted by nickname per bldg
-							tempOrderList := strings.Split(refOrders[i], ";")
-							for indx, val := range tempOrderList {
-								tempItemList := strings.Split(val, ",")
-								tempFloat, _ := strconv.ParseFloat(tempItemList[2], 64)
-								tempFloat2, _ := strconv.ParseFloat(tempItemList[5], 64)
-
-								iInfo := OrderStuc{
-									Nickname: tempNickname,
-									Span:     1,
-									Item:     tempItemList[0],
-									Unit:     tempItemList[1],
-									Amount:   tempFloat,
-									Note:     tempItemList[3],
-									Unit2:    tempItemList[4],
-									Amount2:  tempFloat2,
-									IsFirst:  false,
-								}
-
-								if indx == 0 {
-									iInfo.IsFirst = true
-									iInfo.Span = len(tempOrderList)
-								}
-
-								t, err := template.New("").Parse(tpl_record)
-								checkError(err, "dailysummaryrecords-dailysummaryrecords-7")
-								err = t.ExecuteTemplate(w, "t_loop", iInfo)
-								checkError(err, "dailysummaryrecords-dailysummaryrecords-8")
+					refIndx := refMap[tempNickname]
+					for _, i := range refIndx {
+						//write out orders sorted by nickname per bldg
+						tempOrderList := strings.Split(refOrders[i], "?")
+						for indx, val := range tempOrderList {
+							tempItemList := strings.Split(val, "^")
+							tempFloat, _ := strconv.ParseFloat(tempItemList[2], 64)
+							tempFloat2, _ := strconv.ParseFloat(tempItemList[5], 64)
+							tempUnit2 := tempItemList[4]
+							if tempUnit2 == "" {
+								tempUnit2 = itemUnitMap[tempItemList[0]]
 							}
+
+							iInfo := OrderStuc{
+								Nickname: tempNickname,
+								Span:     1,
+								Item:     tempItemList[0],
+								Unit:     tempItemList[1],
+								Amount:   tempFloat,
+								Note:     tempItemList[3],
+								Unit2:    tempUnit2,
+								Amount2:  tempFloat2,
+								IsFirst:  false,
+							}
+
+							if indx == 0 {
+								iInfo.IsFirst = true
+								iInfo.Span = len(tempOrderList)
+							}
+
+							t, err := template.New("").Parse(tpl_record)
+							checkError(err, "dailysummaryrecords-dailysummaryrecords-7")
+							err = t.ExecuteTemplate(w, "t_loop", iInfo)
+							checkError(err, "dailysummaryrecords-dailysummaryrecords-8")
 						}
 					}
 				}
@@ -118,124 +140,127 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
 			err := r.ParseForm()
 			checkError(err, "dailysummaryrecords-dailysummaryrecords-15")
-			status := checkboxParser(r.Form["Delete"])
-			nicknames := r.Form["Nickname"]
-			spansStr := r.Form["Span"]
-			spans := make([]int, 0)
-			for _, val := range spansStr {
-				tempInt, err := strconv.ParseInt(val, 10, 64)
-				checkError(err, "dailysummaryrecords-dailysummaryrecords-a")
-				spans = append(spans, int(tempInt))
-			}
+			go func() { //assign a new goroutine to improve speed
+				status := checkboxParser(r.Form["Delete"])
+				nicknames := r.Form["Nickname"]
+				spansStr := r.Form["Span"]
+				spans := make([]int, 0)
+				for _, val := range spansStr {
+					tempInt, err := strconv.ParseInt(val, 10, 64)
+					checkError(err, "dailysummaryrecords-dailysummaryrecords-a")
+					spans = append(spans, int(tempInt))
+				}
 
-			cnt := 0
-			sCnt := 0
-			collected := Collection{
-				Nicknames: make([]string, 0),
-				Items:     make([]string, 0),
-				Units:     make([]string, 0),
-				Amounts:   make([]string, 0),
-				Notes:     make([]string, 0),
-				Units2:    make([]string, 0),
-				Amounts2:  make([]string, 0),
-			}
-			nMap := make(map[string][]int)
-			uniqueNicknames := make([]string, 0)
-			for i, n := range nicknames {
-				for j := 0; j < spans[i]; j++ {
-					if status[sCnt] == 0 {
-						collected.Nicknames = append(collected.Nicknames, n)
-						collected.Items = append(collected.Items, r.Form["Item"][sCnt])
-						collected.Units = append(collected.Units, r.Form["Unit"][sCnt])
-						if r.Form["Amount"][sCnt] != "" {
-							collected.Amounts = append(collected.Amounts, r.Form["Amount"][sCnt])
-						} else {
-							collected.Amounts = append(collected.Amounts, "0")
-						}
-						collected.Notes = append(collected.Notes, r.Form["Notes"][sCnt])
-						collected.Units2 = append(collected.Units2, r.Form["Unit2"][sCnt])
-						if r.Form["Amount2"][sCnt] != "" {
-							collected.Amounts2 = append(collected.Amounts2, r.Form["Amount2"][sCnt])
-						} else {
-							collected.Amounts2 = append(collected.Amounts2, "0")
-						}
+				cnt := 0
+				sCnt := 0
+				collected := Collection{
+					Nicknames: make([]string, 0),
+					Items:     make([]string, 0),
+					Units:     make([]string, 0),
+					Amounts:   make([]string, 0),
+					Notes:     make([]string, 0),
+					Units2:    make([]string, 0),
+					Amounts2:  make([]string, 0),
+				}
+				nMap := make(map[string][]int)
+				uniqueNicknames := make([]string, 0)
+				for i, n := range nicknames {
+					for j := 0; j < spans[i]; j++ {
+						if status[sCnt] == 0 {
+							collected.Nicknames = append(collected.Nicknames, n)
+							collected.Items = append(collected.Items, r.Form["Item"][sCnt])
+							collected.Units = append(collected.Units, r.Form["Unit"][sCnt])
+							if r.Form["Amount"][sCnt] != "" {
+								collected.Amounts = append(collected.Amounts, r.Form["Amount"][sCnt])
+							} else {
+								collected.Amounts = append(collected.Amounts, "0")
+							}
+							collected.Notes = append(collected.Notes, r.Form["Notes"][sCnt])
+							collected.Units2 = append(collected.Units2, r.Form["Unit2"][sCnt])
+							if r.Form["Amount2"][sCnt] != "" {
+								collected.Amounts2 = append(collected.Amounts2, r.Form["Amount2"][sCnt])
+							} else {
+								collected.Amounts2 = append(collected.Amounts2, "0")
+							}
 
-						if nMap[n] != nil {
-							nMap[n] = append(nMap[n], cnt)
-						} else {
-							nMap[n] = []int{cnt}
-							uniqueNicknames = append(uniqueNicknames, n)
+							if nMap[n] != nil {
+								nMap[n] = append(nMap[n], cnt)
+							} else {
+								nMap[n] = []int{cnt}
+								uniqueNicknames = append(uniqueNicknames, n)
+							}
+							cnt += 1
 						}
-						cnt += 1
+						sCnt += 1
 					}
-					sCnt += 1
 				}
-			}
 
-			for _, n := range uniqueNicknames {
-				wItems := make([]string, 0)
-				wUnits := make([]string, 0)
-				wAmounts := make([]float64, 0)
-				wNotes := make([]string, 0)
-				wUnits2 := make([]string, 0)
-				wAmounts2 := make([]float64, 0)
+				for _, n := range uniqueNicknames {
+					wItems := make([]string, 0)
+					wUnits := make([]string, 0)
+					wAmounts := make([]float64, 0)
+					wNotes := make([]string, 0)
+					wUnits2 := make([]string, 0)
+					wAmounts2 := make([]float64, 0)
 
-				tempLocs := nMap[n]
-				tempCheck := make([]bool, len(tempLocs))
-				for z, _ := range tempCheck {
-					tempCheck[z] = false
-				}
-				for z, _ := range tempLocs {
-					if tempCheck[z] == true { //if previously selected
-						//Do nothing
-					} else if z == len(tempLocs)-1 && tempCheck[z] == false { //if it's the last one & not selected before
-						wItems = append(wItems, collected.Items[tempLocs[z]])
-						wUnits = append(wUnits, collected.Units[tempLocs[z]])
-						wNotes = append(wNotes, collected.Notes[tempLocs[z]])
-						wUnits2 = append(wUnits2, collected.Units2[tempLocs[z]])
+					tempLocs := nMap[n]
+					tempCheck := make([]bool, len(tempLocs))
+					for z, _ := range tempCheck {
+						tempCheck[z] = false
+					}
+					for z, _ := range tempLocs {
+						if tempCheck[z] == true { //if previously selected
+							//Do nothing
+						} else if z == len(tempLocs)-1 && tempCheck[z] == false { //if it's the last one & not selected before
+							wItems = append(wItems, collected.Items[tempLocs[z]])
+							wUnits = append(wUnits, collected.Units[tempLocs[z]])
+							wNotes = append(wNotes, collected.Notes[tempLocs[z]])
+							wUnits2 = append(wUnits2, collected.Units2[tempLocs[z]])
 
-						tempAmount, err := strconv.ParseFloat(collected.Amounts[tempLocs[z]], 64)
-						checkError(err, "dailysummaryrecords-dailysummaryrecords-16")
-						tempAmount2, err := strconv.ParseFloat(collected.Amounts2[tempLocs[z]], 64)
-						checkError(err, "dailysummaryrecords-dailysummaryrecords-17")
-						wAmounts = append(wAmounts, tempAmount)
-						wAmounts2 = append(wAmounts2, tempAmount2)
-					} else { //if not selected & not the last one
-						wAmount, err := strconv.ParseFloat(collected.Amounts[tempLocs[z]], 64)
-						checkError(err, "dailysummaryrecords-dailysummaryrecords-18")
-						wAmount2, err := strconv.ParseFloat(collected.Amounts2[tempLocs[z]], 64)
-						checkError(err, "dailysummaryrecords-dailysummaryrecords-19")
-						tempNotes := collected.Notes[tempLocs[z]]
-						for x := z + 1; x < len(tempLocs); x++ {
-							if tempCheck[x] == false {
-								//see if Item, Unit and Unit2 are matching
-								if strings.EqualFold(collected.Items[tempLocs[z]], collected.Items[tempLocs[x]]) &&
-									strings.EqualFold(collected.Units[tempLocs[z]], collected.Units[tempLocs[x]]) &&
-									strings.EqualFold(collected.Units2[tempLocs[z]], collected.Units2[tempLocs[x]]) {
-									tempAmount, err := strconv.ParseFloat(collected.Amounts[tempLocs[x]], 64)
-									checkError(err, "dailysummaryrecords-dailysummaryrecords-20")
-									tempAmount2, err := strconv.ParseFloat(collected.Amounts2[tempLocs[x]], 64)
-									checkError(err, "dailysummaryrecords-dailysummaryrecords-21")
-									wAmount += tempAmount
-									wAmount2 += tempAmount2
-									if collected.Notes[tempLocs[x]] != "" {
-										tempNotes = tempNotes + " | " + collected.Notes[tempLocs[x]]
+							tempAmount, err := strconv.ParseFloat(collected.Amounts[tempLocs[z]], 64)
+							checkError(err, "dailysummaryrecords-dailysummaryrecords-16")
+							tempAmount2, err := strconv.ParseFloat(collected.Amounts2[tempLocs[z]], 64)
+							checkError(err, "dailysummaryrecords-dailysummaryrecords-17")
+							wAmounts = append(wAmounts, tempAmount)
+							wAmounts2 = append(wAmounts2, tempAmount2)
+						} else { //if not selected & not the last one
+							wAmount, err := strconv.ParseFloat(collected.Amounts[tempLocs[z]], 64)
+							checkError(err, "dailysummaryrecords-dailysummaryrecords-18")
+							wAmount2, err := strconv.ParseFloat(collected.Amounts2[tempLocs[z]], 64)
+							checkError(err, "dailysummaryrecords-dailysummaryrecords-19")
+							tempNotes := collected.Notes[tempLocs[z]]
+							for x := z + 1; x < len(tempLocs); x++ {
+								if tempCheck[x] == false {
+									//see if Item, Unit and Unit2 are matching
+									if strings.EqualFold(collected.Items[tempLocs[z]], collected.Items[tempLocs[x]]) &&
+										strings.EqualFold(collected.Units[tempLocs[z]], collected.Units[tempLocs[x]]) &&
+										strings.EqualFold(collected.Units2[tempLocs[z]], collected.Units2[tempLocs[x]]) {
+										tempAmount, err := strconv.ParseFloat(collected.Amounts[tempLocs[x]], 64)
+										checkError(err, "dailysummaryrecords-dailysummaryrecords-20")
+										tempAmount2, err := strconv.ParseFloat(collected.Amounts2[tempLocs[x]], 64)
+										checkError(err, "dailysummaryrecords-dailysummaryrecords-21")
+										wAmount += tempAmount
+										wAmount2 += tempAmount2
+										if collected.Notes[tempLocs[x]] != "" {
+											tempNotes = tempNotes + " | " + collected.Notes[tempLocs[x]]
+										}
+										tempCheck[x] = true
 									}
-									tempCheck[x] = true
 								}
 							}
+							wItems = append(wItems, collected.Items[tempLocs[z]])
+							wUnits = append(wUnits, collected.Units[tempLocs[z]])
+							wUnits2 = append(wUnits2, collected.Units2[tempLocs[z]])
+							wAmounts = append(wAmounts, wAmount)
+							wAmounts2 = append(wAmounts2, wAmount2)
+							wNotes = append(wNotes, tempNotes)
 						}
-						wItems = append(wItems, collected.Items[tempLocs[z]])
-						wUnits = append(wUnits, collected.Units[tempLocs[z]])
-						wUnits2 = append(wUnits2, collected.Units2[tempLocs[z]])
-						wAmounts = append(wAmounts, wAmount)
-						wAmounts2 = append(wAmounts2, wAmount2)
-						wNotes = append(wNotes, tempNotes)
 					}
+					updateOrders(n, wItems, wUnits, wAmounts, wNotes, wUnits2, wAmounts2)
 				}
-				updateOrders(n, wItems, wUnits, wAmounts, wNotes, wUnits2, wAmounts2)
-			}
+			}()
 
+			http.Redirect(w, r, "/DailySummaryPrint?"+strings.Join(selections, "+"), http.StatusSeeOther)
 		}
 	}
 }
@@ -252,18 +277,7 @@ const tpl_record = `
 {{define "t_top"}}
 <html>
 <head>
-<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-<script>
-  $(function () {
-    $('form').on('submit', function (e) {
-      e.preventDefault();
-      $.ajax({
-        type: 'post',
-        data: $('form').serialize(),
-      });
-    });
-  });
-</script>
+
 <style>
 table, th, td {
     border: 1px solid black;
@@ -280,7 +294,7 @@ input[type=checkbox] {
 input[type=submit] {
   width: 200px; 
   height: 50px;
-font-size: 20px;
+  font-size: 20px;
 }
 </style>
 </head>
@@ -315,9 +329,9 @@ font-size: 20px;
     <td><input type="text" name="Item" value="{{.Item}}" /></td>
     <td><input type="text" name="Unit" value="{{.Unit}}" /></td>
     <td><input type="text" name="Amount" value="{{.Amount}}" /></td>
-	<td><input type="text" name="Notes" value="{{.Note}}" /></td>
+	<td><input type="text" name="Notes" value="{{.Note}}"/></td>
     <td><input type="text" name="Unit2" value="{{.Unit2}}" /></td>
-    <td><input type="text" name="Amount2" value="{{.Amount2}}" /></td>
+    <td><input type="text" name="Amount2" value="{{if gt .Amount2 0.0}}{{.Amount2}}{{end}}" /></td>
     <td><input type="hidden" name="Delete" value="0" /><input type="checkbox" name="Delete" value="1" /></td>
 </tr>
 {{end}}
@@ -328,9 +342,8 @@ font-size: 20px;
 {{end}}
 
 {{define "t_bot"}}
-<input type="submit" value="Submit">
+<input type="submit" value="Save & Proceed">
 </form>
-<br><br><br><br><br><br>
 </body>
 </html>
 {{end}}

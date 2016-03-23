@@ -23,15 +23,18 @@ func main() {
 	manageMux := http.NewServeMux()
 	manageMux.HandleFunc("/login", login)
 	manageMux.HandleFunc("/", manage)
-	manageMux.HandleFunc("/OrderInfo", orderinfo)                     //Log Orders
-	manageMux.HandleFunc("/PurchaseInfo", purchaseinfo)               //Log Purchases
-	manageMux.HandleFunc("/UnitsList", unitslist)                     //lb, ea, etc.
-	manageMux.HandleFunc("/ItemList", itemlist)                       //List of items to serve
-	manageMux.HandleFunc("/CustomerList", customerlist)               //List of customers
-	manageMux.HandleFunc("/BuildingList", buildinglist)               //Serving buildings
-	manageMux.HandleFunc("/DailySummary", dailysummary)               //Daily Summary selection page
-	manageMux.HandleFunc("/DailySummaryRecords", dailysummaryrecords) //Daily Summary summary page
-	//manageMux.HandleFunc("/DailySummaryPrint", dailysummaryprint)     //Daily Summary printout page
+	manageMux.HandleFunc("/OrderInfo", orderinfo)                         //Log Orders
+	manageMux.HandleFunc("/PurchaseInfo", purchaseinfo)                   //Log Purchases
+	manageMux.HandleFunc("/UnitsList", unitslist)                         //lb, ea, etc.
+	manageMux.HandleFunc("/ItemList", itemlist)                           //List of items to serve
+	manageMux.HandleFunc("/CustomerList", customerlist)                   //List of customers
+	manageMux.HandleFunc("/BuildingList", buildinglist)                   //Serving buildings
+	manageMux.HandleFunc("/DailySummary", dailysummary)                   //Daily Summary selection page
+	manageMux.HandleFunc("/DailySummaryRecords", dailysummaryrecords)     //Daily Summary summary page
+	manageMux.HandleFunc("/DailySummaryPrint", dailysummaryprint)         //Daily Summary printout page
+	manageMux.HandleFunc("/DailySummaryChecklist", dailysummarychecklist) //Daily Summary checklist for print
+	manageMux.HandleFunc("/DailySummaryReceipt", dailysummaryreceipt)     //Daily Summary receipts for print
+	manageMux.HandleFunc("/DailySummarySubmit", dailysummarysubmit)       //Daily Summary submittion
 
 	//domain (for future)
 

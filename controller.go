@@ -184,11 +184,11 @@ func logOrders(nicknames []string, items []string, units []string, amounts []str
 		orderList := ""
 		for i, _ := range items {
 			if items[i] != "" && units[i] != "" && amounts[i] != "" {
-				orderList = orderList + items[i] + "," + units[i] + "," + amounts[i] + "," + notes[i] + ",,,;"
+				orderList = orderList + items[i] + "^" + units[i] + "^" + amounts[i] + "^" + notes[i] + "^^^?"
 			}
 		}
 		if orderList != "" {
-			orderList = orderList[:len(orderList)-1] //remove the last delimiter ;
+			orderList = orderList[:len(orderList)-1] //remove the last delimiter
 		}
 		_ = ordertableAppend(nickname, getCurrentDate(), orderList)
 	}
@@ -225,9 +225,7 @@ func updateOrders(nickname string, items []string, units []string, amounts []flo
 		date = tempCheck
 	}
 
-	for _, val := range ids {
-		_ = ordertableDelete(val)
-	}
+	_ = ordertableDelete(ids)
 
 	refItems, refUnits, refUprices, _ := itemtableGet()
 	uMap := make(map[string]string)
@@ -241,15 +239,15 @@ func updateOrders(nickname string, items []string, units []string, amounts []flo
 	for i, _ := range items {
 		var price float64
 		price = 0
-		if strings.EqualFold(uMap[items[i]], units2[i]) { //only record if available unit is found
+		if uMap[items[i]] == units2[i] { //only record if available unit is found
 			price = pMap[items[i]] * amounts2[i]
 		}
 
 		tempOrders := []string{items[i], units[i], strconv.FormatFloat(amounts[i], 'f', 2, 64), notes[i], units2[i], strconv.FormatFloat(amounts2[i], 'f', 2, 64), strconv.FormatFloat(price, 'f', 2, 64)}
-		tempOrderList = append(tempOrderList, strings.Join(tempOrders, ","))
+		tempOrderList = append(tempOrderList, strings.Join(tempOrders, "^"))
 	}
 
-	_ = ordertableAppend(nickname, date, strings.Join(tempOrderList, ";"))
+	_ = ordertableAppend(nickname, date, strings.Join(tempOrderList, "?"))
 }
 
 func logPurchases(items []string, units []string, amounts []string) bool {
