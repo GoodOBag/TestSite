@@ -162,6 +162,7 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 					Units2:    make([]string, 0),
 					Amounts2:  make([]string, 0),
 				}
+				rmItemNicknames := make([]string, 0)
 				nMap := make(map[string][]int)
 				uniqueNicknames := make([]string, 0)
 				for i, n := range nicknames {
@@ -190,12 +191,17 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 								uniqueNicknames = append(uniqueNicknames, n)
 							}
 							cnt += 1
+						} else {
+							rmItemNicknames = append(rmItemNicknames, n)
 						}
 						sCnt += 1
 					}
 				}
 
+				cnt = 0
+				uniqueNameMap := make(map[string]int)
 				for _, n := range uniqueNicknames {
+					uniqueNameMap[n] = 1
 					wItems := make([]string, 0)
 					wUnits := make([]string, 0)
 					wAmounts := make([]float64, 0)
@@ -258,6 +264,15 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 					}
 					updateOrders(n, wItems, wUnits, wAmounts, wNotes, wUnits2, wAmounts2)
 				}
+				//remove orders which the entire nickname is selected to be removed
+				uniqueRmNicknames := uniqueStrings(rmItemNicknames)
+				rmNicknames := make([]string, 0)
+				for _, rn := range uniqueRmNicknames {
+					if uniqueNameMap[rn] == 0 {
+						rmNicknames = append(rmNicknames, rn)
+					}
+				}
+				deleteOrders(rmNicknames)
 			}()
 
 			http.Redirect(w, r, "/DailySummaryPrint?"+strings.Join(selections, "+"), http.StatusSeeOther)

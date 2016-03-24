@@ -250,6 +250,16 @@ func updateOrders(nickname string, items []string, units []string, amounts []flo
 	_ = ordertableAppend(nickname, date, strings.Join(tempOrderList, "?"))
 }
 
+func deleteOrders(nicknames []string) {
+	idList := make([]int, 0)
+	for _, n := range nicknames {
+		ids, _ := ordertableGetActivePerNickname(n)
+		idList = append(idList, ids...)
+	}
+
+	_ = ordertableDelete(idList)
+}
+
 func logPurchases(items []string, units []string, amounts []string) bool {
 	for i, _ := range items {
 		if items[i] != "" && units[i] != "" && amounts[i] != "" {
