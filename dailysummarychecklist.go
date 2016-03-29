@@ -31,6 +31,12 @@ func dailysummarychecklist(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		_, cName, cPhone, _, cRoom, _ := getCustomers()
+		cusMap := make(map[string]int)
+		for i, n := range cName {
+			cusMap[n] = i
+		}
+
 		t, err := template.New("").Parse(tpl_checklist)
 		checkError(err, "dailysummarychecklist-dailysummarychecklist-1")
 		err = t.ExecuteTemplate(w, "t_top", "")
@@ -74,6 +80,8 @@ func dailysummarychecklist(w http.ResponseWriter, r *http.Request) {
 
 						iInfo := OrderStuc{
 							Nickname: tempNickname,
+							Phone:    cPhone[cusMap[tempNickname]],
+							Room:     cRoom[cusMap[tempNickname]],
 							Span:     1,
 							Item:     tempItemList[0],
 							Unit:     tempItemList[1],
@@ -127,15 +135,19 @@ th, td {
 }
 .A {
 	width: 150px;
+	max-width: 150px;
 }
 .B {
 	width: 100px;
+	max-width: 100px;
 }
 .C {
 	width: 50px;
+	max-width: 50px;
 }
 .D {
 	width: 50px;
+	max-width: 50px;
 }
 .E {
 	width: 100px;
@@ -144,15 +156,19 @@ th, td {
 }
 .F {
 	width: 50px;
+	max-width: 50px;
 }
 .G {
-	width: 50px;
+	width: 55px;
+	max-width: 55px;
 }
 .H {
 	width: 60px;
+	max-width: 60px;
 }
 .I {
 	width: 60px;
+	max-width: 60px;
 	text-align: center;
 }
 </style>
@@ -182,7 +198,8 @@ th, td {
 {{define "t_loop"}}
 <tr>
     {{if .IsFirst}}
-	  <th rowspan="{{.Span}}" class="A">{{.Nickname}}</th>
+	  <th rowspan="{{.Span}}" class="A">{{.Nickname}}<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;
+	  {{.Phone}}<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Room: {{.Room}}</th>
 	{{end}}
     <td class="B">{{.Item}}</td>
     <td class="C">{{.Unit}}</td>

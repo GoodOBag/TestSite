@@ -10,6 +10,8 @@ import (
 
 type OrderStuc struct { //some of the fields are for other pages
 	Nickname string
+	Phone    string
+	Room     string
 	Span     int
 	Item     string
 	Unit     string

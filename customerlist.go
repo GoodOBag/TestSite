@@ -87,6 +87,7 @@ const tpl_customer = `
 <title></title>
 <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
 <script>
+
   $(function () {
     $('form').on('submit', function (e) {
       e.preventDefault();
@@ -96,6 +97,7 @@ const tpl_customer = `
       });
     });
   });
+	
 </script>
 </head>
 <body>
