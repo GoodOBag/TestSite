@@ -1,11 +1,8 @@
 package main
 
 import (
-	//"fmt"
 	"html/template"
 	"net/http"
-	//"os"
-	"strings"
 )
 
 type CustomerInfo struct {
@@ -80,7 +77,7 @@ func customerlist(w http.ResponseWriter, r *http.Request) {
 }
 
 func isBldg(bldg string, bldgOption string) bool {
-	return strings.EqualFold(bldg, bldgOption)
+	return bldg == bldgOption
 }
 
 const tpl_customer = `

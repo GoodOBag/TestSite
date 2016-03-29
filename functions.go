@@ -8,7 +8,7 @@ import (
 
 func findStrInSlice(str string, slice []string) int {
 	for i, val := range slice {
-		if strings.EqualFold(str, val) {
+		if str == val {
 			return i
 		}
 	}
@@ -35,11 +35,11 @@ func isValidPrice(price float64) bool {
 }
 
 func isUnit(unit string, unitOption string) bool {
-	return strings.EqualFold(unit, unitOption)
+	return unit == unitOption
 }
 
 func isMatching(a string, b string) bool {
-	return strings.EqualFold(a, b)
+	return a == b
 }
 
 func uniqueStrings(elements []string) []string {

@@ -41,7 +41,7 @@ func dailysummarychecklist(w http.ResponseWriter, r *http.Request) {
 			//sort nicknames per selection (bldg)
 			tempList := make([]string, 0) //take nicknames per selection (bldg)
 			for i, refBldg := range refBldgs {
-				if strings.EqualFold(refBldg, bldg) {
+				if refBldg == bldg {
 					tempList = append(tempList, refNicknames[i])
 				}
 			}

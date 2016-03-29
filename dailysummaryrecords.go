@@ -238,9 +238,9 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 							for x := z + 1; x < len(tempLocs); x++ {
 								if tempCheck[x] == false {
 									//see if Item, Unit and Unit2 are matching
-									if strings.EqualFold(collected.Items[tempLocs[z]], collected.Items[tempLocs[x]]) &&
-										strings.EqualFold(collected.Units[tempLocs[z]], collected.Units[tempLocs[x]]) &&
-										strings.EqualFold(collected.Units2[tempLocs[z]], collected.Units2[tempLocs[x]]) {
+									if collected.Items[tempLocs[z]] == collected.Items[tempLocs[x]] &&
+										collected.Units[tempLocs[z]] == collected.Units[tempLocs[x]] &&
+										collected.Units2[tempLocs[z]] == collected.Units2[tempLocs[x]] {
 										tempAmount, err := strconv.ParseFloat(collected.Amounts[tempLocs[x]], 64)
 										checkError(err, "dailysummaryrecords-dailysummaryrecords-20")
 										tempAmount2, err := strconv.ParseFloat(collected.Amounts2[tempLocs[x]], 64)
