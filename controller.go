@@ -149,15 +149,15 @@ func updateCustomers(nicknames []string, phones []string, bldgs []string, rooms 
 			tempPhone, _ := strconv.ParseInt(phones[i], 10, 64) //guaranteed no error, checked previously
 			tempIndx := -1
 			for j, _ := range refNicknames {
-				if strings.EqualFold(nicknames[i], refNicknames[j]) {
+				if nicknames[i] == refNicknames[j] {
 					tempIndx = j
 					break
 				}
 			}
 
 			if tempIndx != -1 { //existing record
-				if !(tempPhone == refPhones[tempIndx] && strings.EqualFold(bldgs[i], refBldg[tempIndx]) &&
-					strings.EqualFold(rooms[i], refRooms[tempIndx]) && strings.EqualFold(notes[i], refNotes[tempIndx])) {
+				if !(tempPhone == refPhones[tempIndx] && bldgs[i] == refBldg[tempIndx] &&
+					rooms[i] == refRooms[tempIndx] && notes[i] == refNotes[tempIndx]) {
 					//if not exactly the same, update the row but keep original ID and registration date
 					_ = customertableUpdate(refIds[tempIndx], refDates[tempIndx], refNicknames[tempIndx], tempPhone, bldgs[i], rooms[i], notes[i])
 				}
@@ -167,10 +167,28 @@ func updateCustomers(nicknames []string, phones []string, bldgs []string, rooms 
 
 		} else if nicknames[i] != "" { //delete record if exists
 			for j, _ := range refNicknames {
-				if strings.EqualFold(nicknames[i], refNicknames[j]) {
+				if nicknames[i] == refNicknames[j] {
 					customertableDelete(refIds[j])
 					break
 				}
+			}
+		}
+	}
+
+	//now check if any name is being used in active orders, if yes then add it back in with a note
+	_, activeNickname, _ := ordertableGetActive()
+	if activeNickname != nil {
+		uniqueActiveNickname := uniqueStrings(activeNickname)
+		_, _, modNickname, _, _, _, _ := customertableGet()
+
+		modNMap := make(map[string]int)
+		for _, val := range modNickname {
+			modNMap[val] = 1
+		}
+		for _, val := range uniqueActiveNickname {
+			if modNMap[val] == 0 {
+				indx := findStrInSlice(val, refNicknames)
+				customertableAppend(refDates[indx], val, refPhones[indx], refBldg[indx], refRooms[indx], "Delete aborted. Not able to delete due to active order(s) are under this name")
 			}
 		}
 	}
