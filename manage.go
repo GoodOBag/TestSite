@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -13,9 +12,6 @@ func login(w http.ResponseWriter, r *http.Request) { //login for manage subdomai
 		t.Execute(w, nil)
 	} else { //POST
 		r.ParseForm()
-		//fmt.Println("username:", r.Form["username"])
-		//fmt.Println("password:", r.Form["password"])
-		//fmt.Println(r.Form)
 
 		//add authentication verication function here
 		if r.Form["username"][0] == "lalala" && r.Form["password"][0] == "bababa" {

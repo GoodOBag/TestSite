@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -8,17 +9,30 @@ import (
 
 type Subdomains map[string]http.Handler
 
+const DOMAIN_BODY = "localhost:8080" //change to goodobag after production
+
 func (subdomains Subdomains) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	domainParts := strings.Split(r.Host, ".")
-
-	if mux := subdomains[domainParts[0]]; mux != nil {
-		mux.ServeHTTP(w, r)
-	} else { // Handle 404
-		http.Error(w, "Not found", 404)
+	mux := domainParts[0]
+	if mux == "www" {
+		mux = DOMAIN_BODY
+	}
+	if subdomains[mux] != nil { //subdomain
+		subdomains[mux].ServeHTTP(w, r)
+	} else {
+		if mux == DOMAIN_BODY {
+			subdomains[""].ServeHTTP(w, r)
+		} else {
+			http.Error(w, "Sorry, page is not found", 404)
+		}
 	}
 }
 
 func main() {
+	//domain
+	mainMux := http.NewServeMux()
+	mainMux.HandleFunc("/", indxPage)
+
 	//subdomain "manage"
 	manageMux := http.NewServeMux()
 	manageMux.HandleFunc("/login", login)
@@ -36,14 +50,17 @@ func main() {
 	manageMux.HandleFunc("/DailySummaryReceipt", dailysummaryreceipt)     //Daily Summary receipts for print
 	manageMux.HandleFunc("/DailySummarySubmit", dailysummarysubmit)       //Daily Summary submittion
 
-	//domain (for future)
-
 	//default settings
 	subdomains := make(Subdomains)
+	subdomains[""] = mainMux
 	subdomains["manage"] = manageMux
 
 	err := http.ListenAndServe(":8080", subdomains)
-	checkError(err, "main-main")
+	checkError(err, "main-main-subdomain")
+}
+
+func indxPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Welcome to GoodOBag. For any inquiry, please contact goodobag@gmail.com")
 }
 
 func checkError(err error, loc string) {
