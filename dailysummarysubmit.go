@@ -7,5 +7,6 @@ import (
 )
 
 func dailysummarysubmit(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 
 }

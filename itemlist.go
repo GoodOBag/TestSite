@@ -15,6 +15,7 @@ type ItemInfo struct {
 }
 
 func itemlist(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	TempUnitList := getUnits()
 
 	TempItems, TempUnits, TempPrice, TempNotes := getItems()

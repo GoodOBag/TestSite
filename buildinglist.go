@@ -14,6 +14,7 @@ type BuildingsDefault struct {
 }
 
 func buildinglist(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	_, TempBldg, TempAddr, TempZip, TempNotes := getBldgs()
 
 	t, err := template.New("").Parse(tpl_building)

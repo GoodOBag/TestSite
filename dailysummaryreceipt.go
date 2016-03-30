@@ -21,6 +21,7 @@ const COL_PER_PAGE int = 3    //number of columns to fit 1 letter sized paper
 const HEADER_LINES int = 4    //number of rows for rows other than item/amount/price
 
 func dailysummaryreceipt(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	url := r.URL.String()
 	sIndx := strings.Index(url, "?")
 	if sIndx == -1 { //if no selection, print something

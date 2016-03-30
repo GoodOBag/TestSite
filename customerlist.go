@@ -15,6 +15,7 @@ type CustomerInfo struct {
 }
 
 func customerlist(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	_, TempBldgList, _, _, _ := getBldgs()
 	_, TempNicknames, TempPhone, TempBldg, TempRoom, TempNotes := getCustomers()
 	t, err := template.New("").Funcs(template.FuncMap{

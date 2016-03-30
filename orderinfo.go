@@ -13,6 +13,7 @@ type OrderInfo struct {
 }
 
 func orderinfo(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	_, TempNicknames, _, _, _, _ := getCustomers()
 	TempUnits := getUnits()
 	TempItems, _, _, _ := getItems()

@@ -8,6 +8,7 @@ import (
 )
 
 func dailysummaryprint(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	url := r.URL.String()
 	sIndx := strings.Index(url, "?")
 	if sIndx == -1 { //if no selection, print something

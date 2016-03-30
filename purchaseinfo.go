@@ -15,6 +15,7 @@ type PinfoDefault struct {
 }
 
 func purchaseinfo(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	TempItems, _, _, _ := getItems()
 	TempUnits := getUnits()
 

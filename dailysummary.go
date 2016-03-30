@@ -10,6 +10,7 @@ type SelectInfo struct {
 }
 
 func dailysummary(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	_, _, bldgs, _ := getOrders()
 	sinfo := SelectInfo{}
 

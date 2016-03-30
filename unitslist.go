@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -11,6 +10,7 @@ type UnitInfo struct {
 }
 
 func unitslist(w http.ResponseWriter, r *http.Request) {
+	authCheck(w, r)
 	ulist := UnitInfo{
 		Units: getUnits(),
 	}
@@ -27,7 +27,6 @@ func unitslist(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "unitslist-unitslist-3")
 
 	if r.Method == "POST" {
-		//fmt.Println(r.Form["Unit"])
 		_ = updateUnits(r.Form["Unit"])
 	}
 }
