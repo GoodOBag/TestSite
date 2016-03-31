@@ -14,13 +14,13 @@ const DOMAIN_BODY = "localhost:8080" //change to goodobag after production
 func (subdomains Subdomains) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	domainParts := strings.Split(r.Host, ".")
 	mux := domainParts[0]
-	if mux == "www" {
+	if mux == "www" { //remove the effect of www
 		mux = DOMAIN_BODY
 	}
 	if subdomains[mux] != nil { //subdomain
 		subdomains[mux].ServeHTTP(w, r)
 	} else {
-		if mux == DOMAIN_BODY {
+		if mux == DOMAIN_BODY { //domain
 			subdomains[""].ServeHTTP(w, r)
 		} else {
 			http.Error(w, "Sorry, page is not found", 404)

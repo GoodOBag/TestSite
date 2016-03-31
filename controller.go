@@ -266,6 +266,7 @@ func updateOrders(nickname string, items []string, units []string, amounts []flo
 	}
 
 	_ = ordertableAppend(nickname, date, strings.Join(tempOrderList, "?"))
+	//item list: item ^ unit ^ amount ^ notes ^ unit2 ^ amount2 ^ price? ...
 }
 
 func deleteOrders(nicknames []string) {
