@@ -103,6 +103,8 @@ input[type=submit] {
 <h3>{{.Msg}}</h3>
 {{end}}
 </form>
+<br>
+<a href="/">Click me to go back to main panel</a>
 </body>
 </html>
 `

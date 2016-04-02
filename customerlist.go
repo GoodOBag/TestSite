@@ -144,7 +144,8 @@ const tpl_customer = `
   <span>&nbsp</span>
   <input type="submit" value="Update">
 </form>
-
+<br>
+<a href="/">Click me to go back to main panel</a>
 
 </body>
 </html>

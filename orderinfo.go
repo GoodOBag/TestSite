@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"html/template"
 	"net/http"
 )
@@ -46,7 +45,6 @@ func orderinfo(w http.ResponseWriter, r *http.Request) {
 	checkError(err, "orderinfo-orderinfo-8")
 
 	if r.Method == "POST" {
-		//fmt.Println(r.Form)
 		_ = logOrders(r.Form["Nickname"], r.Form["Item"], r.Form["Unit"], r.Form["Amount"], r.Form["Notes"])
 	}
 }
@@ -63,7 +61,8 @@ const tpl_order = `
 
   <p><span>&nbsp</span>*Nickname</p>
   <span>&nbsp</span>
-  <select name="Nickname">
+  <select name="Nickname" required>
+	<option selected disabled hidden style='display: none' value=''>Please select</option>
 	{{range .NicknameList}}
 	  <option>{{.}}</option>
 	{{end}}
@@ -111,7 +110,8 @@ const tpl_order = `
   <span>&nbsp</span>
   <input type="submit" value="Save & Proceed">
 </form>
-
+<br>
+<a href="/">Click me to go back to main panel</a>
 </body>
 </html>
 {{end}}

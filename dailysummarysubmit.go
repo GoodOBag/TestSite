@@ -111,7 +111,8 @@ func dailysummarysubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == "POST" {
 		_ = submitReport()
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		t, _ := template.New("").Parse(tpl_success)
+		_ = t.Execute(w, "")
 	}
 }
 
@@ -119,6 +120,16 @@ const tpl_wrong = `
 <html>
 <body>
 <h1>Don't hack me!!!</h1>
+</body>
+</html>
+`
+
+const tpl_success = `
+<html>
+<body>
+<h3>Report submitted successfully :)</h3>
+<br><br>
+<a href="/">Click me to go back to main panel</a>
 </body>
 </html>
 `
