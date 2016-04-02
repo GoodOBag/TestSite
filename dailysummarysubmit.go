@@ -127,7 +127,8 @@ const tpl_wrong = `
 const tpl_success = `
 <html>
 <body>
-<h3>Report submitted successfully :)</h3>
+<br>
+<h2>Report submitted successfully :)</h2>
 <br><br>
 <a href="/">Click me to go back to main panel</a>
 </body>

@@ -179,7 +179,6 @@ th, td {
 </head>
 <body>
 
-<h1>Summary</h1>
 <form method="post">
 {{end}}
 
@@ -202,9 +201,9 @@ th, td {
 {{define "t_loop"}}
 <tr>
     {{if .IsFirst}}
-	  <th rowspan="{{.Span}}" class="A">{{.Nickname}}<br><br>
-	  <span class="notbold">{{.Phone}}</span><br>
-	  <span class="notbold">Room: {{.Room}}</span></th>
+	  <th rowspan="{{.Span}}" class="A">{{.Nickname}}
+	  &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<span class="notbold">{{.Phone}}</span><br>
+	  &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;<span class="notbold">Room: {{.Room}}</span></th>
 	{{end}}
     <td class="B">{{.Item}}</td>
     <td class="C">{{.Unit}}</td>
