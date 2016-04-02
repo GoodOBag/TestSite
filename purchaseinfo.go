@@ -12,6 +12,7 @@ type PinfoDefault struct {
 	Item     string
 	Unit     string
 	Amount   float64
+	Price    float64
 }
 
 func purchaseinfo(w http.ResponseWriter, r *http.Request) {
@@ -25,14 +26,12 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 		Item:     "",
 		Unit:     "",
 		Amount:   0,
+		Price:    0,
 	}
 
-	_, _, items, units, amounts := getPurchases()
+	_, _, items, units, amounts, prices := getPurchases()
 
-	t, err := template.New("").Funcs(template.FuncMap{
-		"isMatching":   isMatching,
-		"isValidPrice": isValidPrice,
-	}).Parse(tpl_purchase)
+	t, err := template.New("").Parse(tpl_purchase)
 	checkError(err, "purchaseinfo-purchaseinfo-1")
 	err = t.ExecuteTemplate(w, "t_top", pinfo)
 	checkError(err, "purchaseinfo-purchaseinfo-2")
@@ -40,11 +39,9 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 		pinfo.Item = items[i]
 		pinfo.Unit = units[i]
 		pinfo.Amount = amounts[i]
+		pinfo.Price = prices[i]
 
-		t, err = template.New("").Funcs(template.FuncMap{
-			"isMatching":   isMatching,
-			"isValidPrice": isValidPrice,
-		}).Parse(tpl_purchase)
+		t, err = template.New("").Parse(tpl_purchase)
 		checkError(err, "purchaseinfo-purchaseinfo-3")
 		err = r.ParseForm()
 		checkError(err, "purchaseinfo-purchaseinfo-4")
@@ -56,11 +53,9 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 		pinfo.Item = ""
 		pinfo.Unit = ""
 		pinfo.Amount = 0
+		pinfo.Price = 0
 
-		t, err = template.New("").Funcs(template.FuncMap{
-			"isMatching":   isMatching,
-			"isValidPrice": isValidPrice,
-		}).Parse(tpl_purchase)
+		t, err = template.New("").Parse(tpl_purchase)
 		checkError(err, "purchaseinfo-purchaseinfo-3")
 		err = r.ParseForm()
 		checkError(err, "purchaseinfo-purchaseinfo-4")
@@ -68,17 +63,14 @@ func purchaseinfo(w http.ResponseWriter, r *http.Request) {
 		checkError(err, "purchaseinfo-purchaseinfo-5")
 	}
 
-	t, err = template.New("").Funcs(template.FuncMap{
-		"isMatching":   isMatching,
-		"isValidPrice": isValidPrice,
-	}).Parse(tpl_purchase)
+	t, err = template.New("").Parse(tpl_purchase)
 	checkError(err, "purchaseinfo-purchaseinfo-6")
 	err = t.ExecuteTemplate(w, "t_bot", pinfo)
 	checkError(err, "purchaseinfo-purchaseinfo-7")
 
 	if r.Method == "POST" {
 		//fmt.Println(r.Form)
-		_ = logPurchases(r.Form["Item"], r.Form["Unit"], r.Form["Amount"])
+		_ = logPurchases(r.Form["Item"], r.Form["Unit"], r.Form["Amount"], r.Form["Price"])
 	}
 }
 
@@ -111,6 +103,7 @@ const tpl_purchase = `
       <td>Item</td>
       <td>Unit</td>
       <td>Amount</td>
+	  <td>Price</td>
     </tr>
 {{end}}
 
@@ -120,7 +113,7 @@ const tpl_purchase = `
         <select name="Item">
 		  {{$item := .Item}}
           {{range .ItemList}}
-		    <option {{if isMatching $item .}}selected{{end}}>{{.}}</option>
+		    <option {{if eq $item .}}selected{{end}}>{{.}}</option>
 		  {{end}}
         </select>
       </td>
@@ -130,12 +123,13 @@ const tpl_purchase = `
         <select name="Unit">
 		  {{$unit := .Unit}}
 		  {{range .UnitList}}
-		    <option {{if isMatching $unit .}}selected{{end}}>{{.}}</option>
+		    <option {{if eq $unit .}}selected{{end}}>{{.}}</option>
 		  {{end}}          
         </select>
       </td>
       <span>&nbsp</span>
-      <td><input type="number" step="0.01" min="0" name="Amount" value="{{if isValidPrice .Amount}}{{.Amount}}{{end}}"></td>
+      <td><input type="number" step="0.01" min="0" name="Amount" value="{{if gt .Amount 0.0}}{{.Amount}}{{end}}"></td>
+	  <td><input type="number" step="0.01" min="0" name="Price" value="{{if gt .Price 0.0}}{{.Price}}{{end}}"></td>
     </tr>
 {{end}}
 
@@ -144,7 +138,7 @@ const tpl_purchase = `
 
   <br>
   <span>&nbsp</span>
-  <input type="submit" value="Save & Proceed">
+  <input type="submit" value="Save">
 </form>
 
 </body>

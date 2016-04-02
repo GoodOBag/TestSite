@@ -15,6 +15,8 @@ Update - update a row
 Append - append a new row to the end
 Delete - delete a row
 Replace - flush table and input new data into table
+ReplaceActive - flush active record and append new data into table
+UpdateStatus - change status of order/purchase from active "0" to processed "1"
 */
 
 //unit
@@ -238,18 +240,6 @@ func ordertableAppend(nickname string, orderdate int, orderlist string) bool {
 	return true
 }
 
-func ordertableUpdateStatus(id int) bool {
-	db, err := sql.Open("sqlite3", "./database/record.db")
-	checkError(err, "model-ordertableUpdateStatusToActive-1")
-	defer db.Close()
-	stmt, err := db.Prepare("update ordertable set status=?  where id=?")
-	checkError(err, "model-ordertableUpdateStatusToActive-2")
-
-	_, err = stmt.Exec(1, id)
-	checkError(err, "model-ordertableUpdateStatusToActive-3")
-	return true
-}
-
 func ordertableDelete(ids []int) bool {
 	db, err := sql.Open("sqlite3", "./database/record.db")
 	checkError(err, "model-ordertableDelete-1")
@@ -267,7 +257,7 @@ func ordertableDelete(ids []int) bool {
 }
 
 //purchase
-func purchasetableGetActive() (ids []int, dates []int, items []string, units []string, amounts []float64) {
+func purchasetableGetActive() (ids []int, dates []int, items []string, units []string, amounts []float64, prices []float64) {
 	db, err := sql.Open("sqlite3", "./database/record.db")
 	checkError(err, "model-purchasetableGetActive-1")
 	defer db.Close()
@@ -276,81 +266,132 @@ func purchasetableGetActive() (ids []int, dates []int, items []string, units []s
 
 	var id, date, status int
 	var item, unit string
-	var amount float64
+	var amount, price float64
 	for rows.Next() {
-		err = rows.Scan(&id, &date, &item, &unit, &amount, &status)
+		err = rows.Scan(&id, &date, &item, &unit, &amount, &price, &status)
 		checkError(err, "model-purchasetableGetActive-3")
 		ids = append(ids, id)
 		dates = append(dates, date)
 		items = append(items, item)
 		units = append(units, unit)
 		amounts = append(amounts, amount)
+		prices = append(prices, price)
 	}
 	return
 }
-func purchasetableAppend(purchasedate int, item string, unit string, amount float64) bool {
+func purchasetableAppend(purchasedate int, item string, unit string, amount float64, price float64) bool {
 	db, err := sql.Open("sqlite3", "./database/record.db")
 	checkError(err, "model-purchasetableAppend-1")
 	defer db.Close()
-	stmt, err := db.Prepare("INSERT INTO purchasetable(purchasedate, item, unit, amount, status) values(?,?,?,?,?)")
+	stmt, err := db.Prepare("INSERT INTO purchasetable(purchasedate, item, unit, amount, price, status) values(?,?,?,?,?,?)")
 	checkError(err, "model-purchasetableAppend-2")
 
-	_, err = stmt.Exec(purchasedate, item, unit, amount, 0)
+	_, err = stmt.Exec(purchasedate, item, unit, amount, price, 0)
 	checkError(err, "model-purchasetableAppend-3")
 	return true
 }
 
-func purchasetableUpdate(id int, purchasedate int, item string, unit string, amount float64, status int) bool {
+func purchasetableReplaceActive(purchasedate int, items []string, units []string, amounts []float64, prices []float64) bool {
 	db, err := sql.Open("sqlite3", "./database/record.db")
-	checkError(err, "model-purchasetableUpdate-1")
+	checkError(err, "model-purchasetableReplaceActive-1")
 	defer db.Close()
-	stmt, err := db.Prepare("update purchasetable set purchasedate=?, item=?, unit=?, amount=? status=?  where id=?")
-	checkError(err, "model-purchasetableUpdate-2")
 
-	_, err = stmt.Exec(purchasedate, item, unit, amount, status, id)
-	checkError(err, "model-purchasetableUpdate-3")
-	return true
-}
+	_, err = db.Exec("delete from purchasetable where status=0")
+	checkError(err, "model-purchasetableReplaceActive-2")
 
-func purchasetableDelete(id int) bool {
-	db, err := sql.Open("sqlite3", "./database/record.db")
-	checkError(err, "model-purchasetableDelete-1")
-	defer db.Close()
-	stmt, err := db.Prepare("delete from purchasetable where id=?")
-	checkError(err, "model-purchasetableDelete-2")
+	stmt, err := db.Prepare("insert into purchasetable(purchasedate, item, unit, amount, price, status) values(?,?,?,?,?,?)")
+	checkError(err, "model-purchasetableReplaceActive-3")
+	defer stmt.Close()
+	for i, _ := range items {
+		_, err = stmt.Exec(purchasedate, items[i], units[i], amounts[i], prices[i], 0)
+		checkError(err, "model-purchasetableReplaceActive-4")
+	}
 
-	_, err = stmt.Exec(id)
-	checkError(err, "model-purchasetableDelete-3")
 	return true
 }
 
 //status
-func statusGet() (indx int) {
+func orderpurchaseUpdateStatus() bool {
 	db, err := sql.Open("sqlite3", "./database/record.db")
-	checkError(err, "model-statusGet-1")
+	checkError(err, "model-orderpurchaseUpdateStatus-1")
 	defer db.Close()
-	rows, err := db.Query("SELECT * FROM status")
-	checkError(err, "model-statusGet-2")
 
+	var id int
+
+	rows, err := db.Query("SELECT id FROM ordertable WHERE status=0")
+	checkError(err, "model-orderpurchaseUpdateStatus-2")
+
+	ids := make([]int, 0)
 	for rows.Next() {
-		err = rows.Scan(&indx)
-		checkError(err, "model-statusGet-3")
-		break
+		err = rows.Scan(&id)
+		checkError(err, "model-orderpurchaseUpdateStatus-4")
+		ids = append(ids, id)
 	}
+
+	stmt, err := db.Prepare("update ordertable set status=?  where id=?")
+	checkError(err, "model-orderpurchaseUpdateStatus-3")
+	for _, val := range ids {
+		_, err = stmt.Exec(1, val)
+		checkError(err, "model-orderpurchaseUpdateStatus-5")
+	}
+
+	rows, err = db.Query("SELECT id FROM purchasetable WHERE status=0")
+	checkError(err, "model-orderpurchaseUpdateStatus-6")
+
+	ids = nil
+	for rows.Next() {
+		err = rows.Scan(&id)
+		checkError(err, "model-orderpurchaseUpdateStatus-8")
+		ids = append(ids, id)
+	}
+
+	stmt, err = db.Prepare("update purchasetable set status=?  where id=?")
+	checkError(err, "model-orderpurchaseUpdateStatus-7")
+	for _, val := range ids {
+		_, err = stmt.Exec(1, val)
+		checkError(err, "model-orderpurchaseUpdateStatus-9")
+	}
+	return true
+}
+
+func logTempReport(date int, purchases string, orders string) bool {
+	db, err := sql.Open("sqlite3", "./database/record.db")
+	checkError(err, "model-logTempReport-1")
+	defer db.Close()
+
+	stmt, err := db.Prepare("INSERT INTO tempReport(date, purchaseList, orderList) values(?,?,?)")
+	checkError(err, "model-logTempReport-2")
+
+	_, err = stmt.Exec(date, purchases, orders)
+	checkError(err, "model-logTempReport-3")
+	return true
+}
+
+func extractTempReport() (date int, purchases string, orders string) {
+	db, err := sql.Open("sqlite3", "./database/record.db")
+	checkError(err, "model-extractTempReport-1")
+	defer db.Close()
+
+	rows, err := db.Query("SELECT * FROM tempReport")
+	checkError(err, "model-extractTempReport-2")
+	for rows.Next() {
+		err = rows.Scan(&date, &purchases, &orders)
+		checkError(err, "model-extractTempReport-3")
+	}
+	_, err = db.Exec("delete from tempReport") //empty the temp report after being read
+	checkError(err, "model-extractTempReport-4")
 	return
 }
 
-func statusUpdate(indx int) {
-	db, err := sql.Open("sqlite3", "./database/record.db")
-	checkError(err, "model-statusUpdate-1")
+func logReport(date int, purchases string, orders string) bool {
+	db, err := sql.Open("sqlite3", "./database/report.db")
+	checkError(err, "model-logReport-1")
 	defer db.Close()
 
-	_, err = db.Exec("delete from status")
-	checkError(err, "model-statusUpdate-2")
+	stmt, err := db.Prepare("INSERT INTO reports(date, purchaseList, orderList) values(?,?,?)")
+	checkError(err, "model-logReport-2")
 
-	stmt, err := db.Prepare("insert into status(indx) values(?)")
-	checkError(err, "model-statusUpdate-3")
-	_, err = stmt.Exec(indx)
-	checkError(err, "model-statusUpdate-4")
-
+	_, err = stmt.Exec(date, purchases, orders)
+	checkError(err, "model-logReport-3")
+	return true
 }

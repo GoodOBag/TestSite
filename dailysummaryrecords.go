@@ -262,6 +262,8 @@ func dailysummaryrecords(w http.ResponseWriter, r *http.Request) {
 							wUnits2 = append(wUnits2, collected.Units2[tempLocs[z]])
 							wAmounts = append(wAmounts, wAmount)
 							wAmounts2 = append(wAmounts2, wAmount2)
+							tempNotes = strings.Replace(tempNotes, "^", " ", -1) //remove delimiter chars if available
+							tempNotes = strings.Replace(tempNotes, "?", " ", -1)
 							wNotes = append(wNotes, tempNotes)
 						}
 					}

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const EXP_TIMER = 10
+const EXP_TIMER = 120
 
 func authIssue(w http.ResponseWriter, uVal string) {
 	exp := time.Now().Add(time.Minute * EXP_TIMER)

@@ -279,23 +279,41 @@ func deleteOrders(nicknames []string) {
 	_ = ordertableDelete(idList)
 }
 
-func logPurchases(items []string, units []string, amounts []string) bool {
+func logPurchases(items []string, units []string, amounts []string, prices []string) bool {
+	inItems := make([]string, 0)
+	inUnits := make([]string, 0)
+	inAmounts := make([]float64, 0)
+	inPrice := make([]float64, 0)
 	for i, _ := range items {
-		if items[i] != "" && units[i] != "" && amounts[i] != "" {
+		if items[i] != "" && units[i] != "" && amounts[i] != "" && prices[i] != "" {
 			amount, err := strconv.ParseFloat(amounts[i], 64)
 			checkError(err, "controller-logPurchases-1")
-			_ = purchasetableAppend(getCurrentDate(), items[i], units[i], amount)
+			price, err := strconv.ParseFloat(prices[i], 64)
+			checkError(err, "controller-logPurchases-2")
+			inItems = append(inItems, items[i])
+			inUnits = append(inUnits, units[i])
+			inAmounts = append(inAmounts, amount)
+			inPrice = append(inPrice, price)
 		}
-	} //will need to implement feature to remove purchase
-
+	}
+	_ = purchasetableReplaceActive(getCurrentDate(), inItems, inUnits, inAmounts, inPrice)
 	return true
 }
 
-func getPurchases() (ids []int, dates []int, items []string, units []string, amounts []float64) {
-	ids, dates, items, units, amounts = purchasetableGetActive()
+func getPurchases() (ids []int, dates []int, items []string, units []string, amounts []float64, prices []float64) {
+	ids, dates, items, units, amounts, prices = purchasetableGetActive()
 	return
 }
 
-func updatePurchases() {
-	//for daily reports
+func submitTempReport(purchases string, orders string) bool {
+	logTempReport(getCurrentDate(), purchases, orders)
+	return true
+}
+
+func submitReport() bool {
+	date, purchases, orders := extractTempReport()
+	if logReport(date, purchases, orders) {
+		_ = orderpurchaseUpdateStatus()
+	}
+	return true
 }

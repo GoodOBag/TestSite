@@ -172,6 +172,9 @@ th, td {
 	max-width: 60px;
 	text-align: center;
 }
+.notbold{
+    font-weight:normal
+}​
 </style>
 </head>
 <body>
@@ -199,8 +202,9 @@ th, td {
 {{define "t_loop"}}
 <tr>
     {{if .IsFirst}}
-	  <th rowspan="{{.Span}}" class="A">{{.Nickname}}<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;
-	  {{.Phone}}<br>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Room: {{.Room}}</th>
+	  <th rowspan="{{.Span}}" class="A">{{.Nickname}}<br><br>
+	  <span class="notbold">{{.Phone}}</span><br>
+	  <span class="notbold">Room: {{.Room}}</span></th>
 	{{end}}
     <td class="B">{{.Item}}</td>
     <td class="C">{{.Unit}}</td>

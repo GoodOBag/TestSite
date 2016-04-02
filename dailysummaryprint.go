@@ -89,6 +89,7 @@ input[type=submit] {
   font-size: 20px;
 }
 </style>
+<h3>Please note the data may take a few seconds to process</h3>
 </head>
 <body>
 <form method="post">
